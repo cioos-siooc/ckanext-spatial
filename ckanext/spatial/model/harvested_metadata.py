@@ -1503,8 +1503,9 @@ class ISODocument(MappedXmlDocument):
         identifier = values.get('unique-resource-identifier-full', {})
         if identifier:
             doi = self.calculate_identifier(identifier)
-            if doi and re.match(r'^10.\d{4,9}\/[-._;()/:A-Z0-9]+$', doi, re.IGNORECASE):
+            if doi and re.match(r'^10.\d{4,9}\/[-._;()/:a-zA-Z0-9]+$', doi, re.IGNORECASE):
                 value['DOI'] = doi
+
         # TODO: could we have more then one doi?
 
         field = {}
@@ -1515,13 +1516,18 @@ class ISODocument(MappedXmlDocument):
             abstract = field[lang]['abstract']
             field[lang]['abstract'] = abstract.get(lang)
             field[lang]['language'] = lang
-            field[lang]['URL'] = url_for(
-                controller='package',
-                action='read',
-                id=munge.munge_name(values.get('guid', '')),
-                local=lang,
-                qualified=True
+            field[lang]['URL'] = (
+                "https//doi.org/" + value['DOI'] 
+                if value.get('DOI') != None else 
+                url_for(
+                    controller='package',
+                    action='read',
+                    id=munge.munge_name(values.get('guid', '')),
+                    local=lang,
+                    qualified=True
+                )
             )
+           
             field[lang] = json.dumps([field[lang]])
             # the dump converts utf-8 escape sequences to unicode escape
             # sequences so we have to convert back again
