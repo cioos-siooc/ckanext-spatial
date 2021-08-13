@@ -1503,7 +1503,7 @@ class ISODocument(MappedXmlDocument):
         identifier = values.get('unique-resource-identifier-full', {})
         if identifier:
             doi = self.calculate_identifier(identifier)
-            if doi and re.match(r'^10.\d{4,9}\/[-._;()/:a-zA-Z0-9]+$', doi, re.IGNORECASE):
+            if doi and re.match(r'^10.\d{4,9}\/[-._;()/:A-Z0-9]+$', doi, re.IGNORECASE):
                 value['DOI'] = doi
 
         # TODO: could we have more then one doi?
