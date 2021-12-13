@@ -321,8 +321,7 @@ scrapers = {'apache': parse.OneOrMore(parse.Group(apache)),
 
 def _get_scraper(server):
 
-    log.debug('sever: %s', server)
-    if not server or 'apache' in server.lower():
+    if not server or any(x in server.lower() for x in ['apache', 'nginx']):
         return 'apache'
     if server == 'Microsoft-IIS/7.5':
         return 'iis'
