@@ -34,7 +34,7 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.model import HarvestObject
 
 from ckanext.spatial.validation import Validators, all_validators
-from ckanext.spatial.model import ISODocument
+from ckanext.spatial.model import ISODocument, ISODocument_iso19139
 from ckanext.spatial.interfaces import ISpatialHarvester
 from ckantoolkit import config
 
@@ -646,8 +646,12 @@ class SpatialHarvester(HarvesterBase):
 
         # Parse ISO document
         try:
-
-            iso_parser = ISODocument(harvest_object.content)
+            if self.source_config.get('parser') == 'iso19139':
+                log.debug('Using ISO19139 parser')
+                iso_parser = ISODocument_iso19139(harvest_object.content)
+            else:
+                log.debug('Using ISO19115-3 parser')
+                iso_parser = ISODocument(harvest_object.content)
             iso_values = iso_parser.read_values()
         except Exception as e:
             log.exception(e)
