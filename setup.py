@@ -56,6 +56,7 @@ https://docs.ckan.org/projects/ckanext-spatial/en/latest/
 	waf_cioos_harvester=ckanext.spatial.harvesters:WAFHarvesterCIOOS
     doc_harvester=ckanext.spatial.harvesters:DocHarvester
     geonetwork_harvester=ckanext.spatial.harvesters:GeoNetworkHarvester
+    polar_harvester=ckanext.spatial.harvesters:PolarHarvester
 
     # Legacy harvesters
     gemini_csw_harvester=ckanext.spatial.harvesters.gemini:GeminiCswHarvester

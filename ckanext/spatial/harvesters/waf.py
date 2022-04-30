@@ -240,6 +240,7 @@ class WAFHarvester(SpatialHarvester, SingletonPlugin):
             return []
 
     def fetch_stage(self, harvest_object):
+        log.debug('In WAFHarvester Fetch')
 
         # Check harvest object status
         status = self._get_object_extra(harvest_object,'status')
