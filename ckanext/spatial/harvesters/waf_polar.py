@@ -169,6 +169,8 @@ class PolarHarvester(SpatialHarvester, SingletonPlugin):
 
         ######  Get current list of records from source ######
 
+        # TODO: add check to api/metadata/xml/since/{date} to find datasets that have changed.
+
         url = 'hedeby.uwaterloo.ca//api/metadata/xml'
         response = self.search_for_datasets(url, harvest_job)
 
