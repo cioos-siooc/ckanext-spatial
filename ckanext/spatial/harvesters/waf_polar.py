@@ -71,6 +71,8 @@ class PolarHarvester(SpatialHarvester, SingletonPlugin):
         except Exception:
             pass
 
+        # fix some role code errors.
+        # TODO: check if this is fixed in original data yet?
         for c in iso_values.get("cited-responsible-party", []):
             if c:
                 if c['role'] == 'Originator':
@@ -80,6 +82,8 @@ class PolarHarvester(SpatialHarvester, SingletonPlugin):
                 elif c['role'] == 'ri_419':
                     c['role'] = 'collaborator'
 
+        # polar data centre does not provide a link to there data in most cases.
+        # This block provides an email address to contact distributor if set
         resources = []
         if not iso_values.get('resource-locator'):
             for d in iso_values.get('distributor', []):
