@@ -1496,6 +1496,50 @@ class ISODocument(MappedXmlDocument):
             ],
             multiplicity="1..*",
         ),
+        ISOElement(
+                name="acquisition-information",
+                search_paths=[
+                    "mdb:acquisitionInformation/mac:MI_AcquisitionInformation"
+                ],
+                multiplicitiy="0..1",
+                elements=[
+                    ISOElement(
+                        name="scope",
+                        search_paths=[
+                            # ISO19115-3
+                            "mac:scope/mcc:MD_Scope/mcc:level/mcc:MD_ScopeCode/@codeListValue",
+                            "mac:scope/mcc:MD_Scope/mcc:level/mcc:MD_ScopeCode/text()"
+                        ],
+                        multiplicity="0..1",
+                    ),
+
+                    ISOIdentifier(
+                        name="platform_id",
+                        search_paths=[
+                            # ISO19115-3
+                            "mac:platform/mac:MI_Platform/mac:identifier/mcc:MD_Identifier",
+                            "mac:scope/mcc:MD_Scope/mcc:level/mcc:MD_ScopeCode/text()"
+                        ],
+                        multiplicity="0..1",
+                    ),
+                    ISOElement(
+                        name="platform_type",
+                        search_paths=[
+                            # ISO19115-3
+                            "mac:platform/mac:MI_Platform/mac:otherProperty[@xlink:href/text() ='http://vocab.nerc.ac.uk/collection/L06/current/']/gco:Record/gco:CharacterString/text()",
+                        ],
+                        multiplicity="0..1",
+                    ),
+                    ISOIdentifier(
+                        name="instrument_ids",
+                        search_paths=[
+                            # ISO19115-3
+                            "mac:platform/mac:MI_Platform/mac:instrument/mac:MI_Instrument/mac:identifier/mcc:MD_Identifier",
+                        ],
+                        multiplicity="*",
+                    )
+                ]
+        ),
 
     ]
 
