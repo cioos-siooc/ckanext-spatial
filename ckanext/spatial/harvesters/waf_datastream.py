@@ -51,23 +51,33 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
         log.debug(" *** in waf_Datastream get_package_dict")
         package_dict = super(DatastreamSitemapHarvester, self).get_package_dict(iso_values, harvest_object)
 
+        # All DataStream datasets have a DOI so we use that to populate the citation
         iso_values["citation"] = '{"fr": "%s", "en": "%s"}' % (iso_values['unique-resource-identifier'], iso_values['unique-resource-identifier'])
+
+        # TODO: determin if we can set EOV to something useful
         package_dict["eov"] = ["other"]
-        # package_dict["keywords"] = [{'keyword': '{"en": "other"}', 'type': ''}, {'keyword': '{"fr": "autre"}', 'type': ''}]
+
+        # TODO confirm license is harvested correctly
+
+        # French keywords not available from DataStream so we set to 'other'
+        # in some cases there are no keywords at all
         if iso_values.get('keywords'):
             iso_values['keywords'].append({'keyword': '{"fr": "autre"}', 'type': ''})
         else:
             iso_values['keywords'] = [{'keyword': '{"en": "other"}', 'type': ''}, {'keyword': '{"fr": "autre"}', 'type': ''}]
 
-        # package_dict["keywords"] = [{"keyword": '{"en": "other", "fr": "autre"}'}]
+        # French title not available from DataStream
         title = json.loads(package_dict["title"])
         title['fr'] = 'none'
         package_dict["title"] = json.dumps(title)
 
+        # French description not available from DataStream
         notes = json.loads(package_dict["notes"])
         notes['fr'] = 'none'
         package_dict["notes"] = json.dumps(notes)
 
+        # Datastream does not provide a download link in there metadata so we are
+        # adding their dataset metadata page as a resource instead.
         package_dict['resources'] = [
             {
                 'url': iso_values['unique-resource-identifier'],
@@ -92,17 +102,17 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
 
         self._set_source_config(harvest_job.source.config)
 
-        # Get contents
-        try:
-            response = requests.get(source_url, timeout=60)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            self._save_gather_error('Unable to get content for URL: %s: %r' % \
-                                        (source_url, e),harvest_job)
-            return None
+        # # Get contents
+        # try:
+        #     response = requests.get(source_url, timeout=60)
+        #     response.raise_for_status()
+        # except requests.exceptions.RequestException as e:
+        #     self._save_gather_error('Unable to get content for URL: %s: %r' % \
+        #                                 (source_url, e),harvest_job)
+        #     return None
+        #
+        # content = response.content
 
-        content = response.content
-        #scraper = _get_scraper(response.headers.get('server'))
 
         ######  Get current harvest object out of db ######
 
@@ -127,19 +137,35 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
 
         ######  Get current list of records from source ######
 
-        session = requests.Session()
-        sitemap_response = session.get(source_url, stream=False)
+        # Get contents of sitemap.xml
+        # https://datastream.org/dataset/sitemap.xml
+        try:
+            sitemap_response = requests.get(source_url, timeout=60)
+            sitemap_response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            self._save_gather_error('Unable to get content for URL: %s: %r' % \
+                                        (source_url, e),harvest_job)
+            return None
+
         sitemape_content = sitemap_response.text
 
+
+        # session = requests.Session()
+        # sitemap_response = session.get(source_url, stream=False)
+        # sitemape_content = sitemap_response.text
+
         # add xhtml namespace to sitemap document as it's missing
+        # TODO: check if this is fixed
         sitemape_content = sitemape_content.replace(
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xhtml="http://www.w3.org/1999/xhtml"'
         )
         # log.debug('sitemape_content: %r', sitemape_content)
 
+        # convert xml content to lxml etree
         sitemap_tree = etree.fromstring(str.encode(sitemape_content))
 
+        # using dataset urls, generate url to xml metadata files. aka add .iso19115.xml to end
         url_to_modified_harvest = {} ## mapping of url to last_modified in harvest
         try:
             for url_node in sitemap_tree.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}url"):
@@ -164,8 +190,8 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
         change = []
 
         for item in possible_changes:
-            if (not url_to_modified_harvest[item] or not url_to_modified_db[item] #if there is no date assume change
-                or url_to_modified_harvest[item] > url_to_modified_db[item]):
+            if (not url_to_modified_harvest[item] or not url_to_modified_db[item]  # if there is no date assume change
+                    or url_to_modified_harvest[item] > url_to_modified_db[item]):
                 change.append(item)
 
         def create_extras(url, date, status):
