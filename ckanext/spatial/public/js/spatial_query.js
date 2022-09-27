@@ -14,7 +14,8 @@ this.ckan.module('spatial-query', function ($, _) {
         fillOpacity: 0.1,
         clickable: false
       },
-      default_extent: [[90, 180], [-90, -180]]
+      default_extent: [[90, 180], [-90, -180]],
+      pkg_geom: [],
     },
     template: {
       buttons: [
@@ -24,6 +25,7 @@ this.ckan.module('spatial-query', function ($, _) {
         '</div>'
       ].join('')
     },
+    popup: {},
 
     initialize: function () {
       var module = this;
@@ -146,6 +148,70 @@ this.ckan.module('spatial-query', function ($, _) {
       });
       var removeAllControl = new L.Control.RemoveAll();
       map.addControl(removeAllControl);
+
+      var features = this.el.data('pkg_geom');
+      console.log(features);
+
+      module.options.pkg_geom = new L.geoJSON(
+        features
+        // { style: {
+        //     "color": "#33a02c",
+        //     "weight": 2,
+        //     "opacity": 1,
+        //     "fillColor": "#33a02c",
+        //     "fillOpacity": 0.1,
+        //     "clickable": false
+        //   },
+        //   onEachFeature: function (feature, layer) {
+        //     if(feature.properties && feature.properties.title && feature.geometry.type == 'Point'){
+        //       layer.bindPopup(feature.properties.title);
+        //     }
+        //   }
+        // }
+      );
+
+      if (module.options.pkg_geom){
+        module.options.default_extent = module.options.pkg_geom.getBounds();
+      }
+
+      map.addLayer(module.options.pkg_geom);
+
+      map.on('click',function(e){
+        var lat=e.latlng.lat;
+        var long=e.latlng.lng;
+        // alert("you clicked the map at LAT: "+ lat[1] +" and LONG:" + long[0]);
+
+        var match = leafletPip.pointInLayer([long, lat], module.options.pkg_geom, false);
+        // add point features
+        module.options.pkg_geom.eachLayer(function(layer) {
+          if(layer.feature.geometry.type == 'Point'){
+            console.log([lat,long]);
+            console.log([layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]);
+            console.log(map.getZoom());
+            console.log(map.distance([lat,long],[layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]) /((20-map.getZoom()) * 10000))
+
+            if(map.distance([lat,long],[layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]) / ((20-map.getZoom()) * 10000) <= 1 ){
+              match.push(layer);
+            }
+          }
+        });
+
+        var popup_content = '';
+        if (match.length) {
+            popup_content = '<ul>';
+            for (var i = 0; i < match.length; i++) {
+                popup_content += '<li>' + match[i].feature.properties.title + '</li>';
+            }
+            popup_content += '</ul>';
+
+            module.options.popup = L.popup({maxWidth: 600, minWidth: 350, maxHeight: 250, autoPan: true, closeButton: true, autoPanPadding: [2, 2]})
+              .setLatLng([lat, long])
+              .setContent("<h3>Datasets:</h3> " + popup_content)
+              .openOn(map);
+        }
+
+
+      });
 
       // OK add the expander
       $('a.leaflet-draw-draw-rectangle', module.el).on('click', function(e) {
