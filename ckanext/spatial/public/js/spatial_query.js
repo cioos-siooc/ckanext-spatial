@@ -174,44 +174,98 @@ this.ckan.module('spatial-query', function ($, _) {
         module.options.default_extent = module.options.pkg_geom.getBounds();
       }
 
-      map.addLayer(module.options.pkg_geom);
+      //map.addLayer(module.options.pkg_geom);
 
-      map.on('click',function(e){
-        var lat=e.latlng.lat;
-        var long=e.latlng.lng;
-        // alert("you clicked the map at LAT: "+ lat[1] +" and LONG:" + long[0]);
-
-        var match = leafletPip.pointInLayer([long, lat], module.options.pkg_geom, false);
-        // add point features
-        module.options.pkg_geom.eachLayer(function(layer) {
-          if(layer.feature.geometry.type == 'Point'){
-            console.log([lat,long]);
-            console.log([layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]);
-            console.log(map.getZoom());
-            console.log(map.distance([lat,long],[layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]) /((20-map.getZoom()) * 10000))
-
-            if(map.distance([lat,long],[layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]) / ((20-map.getZoom()) * 10000) <= 1 ){
-              match.push(layer);
+      // Add the tile layer to the map
+      // https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/50m/cultural/ne_50m_admin_0_countries.zip
+      var vectorServer = 'http://localdev1.local:7800/'
+      var vectorLayerId = 'public.extent_hexagons'
+      var vectorUrl = vectorServer + vectorLayerId + '/{z}/{x}/{y}.pbf'
+      var vectorTileStyling = {}
+      // Rendering options
+      vectorTileStyling[vectorLayerId] =
+        function(properties, zoom) {
+            var level = properties.admin_level;
+            var fillOpacity = properties.polycount / 10;
+            if(fillOpacity > 1) {fillOpacity = 1;}
+            console.log(properties);
+            return {
+                fill: true,
+                fillColor: 'blue',
+                fillOpacity: fillOpacity,
+                color: 'blue',
+                opacity: 0.3,
+                weight: 0.25,
             }
-          }
-        });
-
-        var popup_content = '';
-        if (match.length) {
-            popup_content = '<ul>';
-            for (var i = 0; i < match.length; i++) {
-                popup_content += '<li>' + match[i].feature.properties.title + '</li>';
-            }
-            popup_content += '</ul>';
-
-            module.options.popup = L.popup({maxWidth: 600, minWidth: 350, maxHeight: 250, autoPan: true, closeButton: true, autoPanPadding: [2, 2]})
-              .setLatLng([lat, long])
-              .setContent("<h3>Datasets:</h3> " + popup_content)
-              .openOn(map);
         }
+      var vectorTileOptions = {
+        rendererFactory: L.canvas.tile,
+        vectorTileLayerStyles: vectorTileStyling,
+        interactive: true,
+        getFeatureId: function (f) {
+          return f.properties['grid_id'] // look for a unique ID in your data
+          }
+      }
+      var vectorLayer = L.vectorGrid
+        .protobuf(vectorUrl, vectorTileOptions)
+        .addTo(map)
 
-
+      vectorLayer.on('click', function (e) {
+        var properties = e.layer.properties
+        var popUpText = Object.entries(properties)
+          .map(function ([key, val]) {
+            if(Array.isArray(JSON.parse(val))){
+              val = '<li>' + JSON.parse(val).join('</li><li>') + '</li>';
+            }
+            return `${key}: ${val}`
+          })
+          .join('<br>')
+        L.popup()
+          .setContent(popUpText)
+          .setLatLng(e.latlng)
+          .openOn(map)
       });
+
+
+
+
+
+      // map.on('click',function(e){
+      //   var lat=e.latlng.lat;
+      //   var long=e.latlng.lng;
+      //   // alert("you clicked the map at LAT: "+ lat[1] +" and LONG:" + long[0]);
+      //
+      //   var match = leafletPip.pointInLayer([long, lat], module.options.pkg_geom, false);
+      //   // add point features
+      //   module.options.pkg_geom.eachLayer(function(layer) {
+      //     if(layer.feature.geometry.type == 'Point'){
+      //       console.log([lat,long]);
+      //       console.log([layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]);
+      //       console.log(map.getZoom());
+      //       console.log(map.distance([lat,long],[layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]) /((20-map.getZoom()) * 10000))
+      //
+      //       if(map.distance([lat,long],[layer.feature.geometry.coordinates[1],layer.feature.geometry.coordinates[0]]) / ((20-map.getZoom()) * 10000) <= 1 ){
+      //         match.push(layer);
+      //       }
+      //     }
+      //   });
+      //
+      //   var popup_content = '';
+      //   if (match.length) {
+      //       popup_content = '<ul>';
+      //       for (var i = 0; i < match.length; i++) {
+      //           popup_content += '<li>' + match[i].feature.properties.title + '</li>';
+      //       }
+      //       popup_content += '</ul>';
+      //
+      //       module.options.popup = L.popup({maxWidth: 600, minWidth: 350, maxHeight: 250, autoPan: true, closeButton: true, autoPanPadding: [2, 2]})
+      //         .setLatLng([lat, long])
+      //         .setContent("<h3>Datasets:</h3> " + popup_content)
+      //         .openOn(map);
+      //   }
+      //
+      //
+      // });
 
       // OK add the expander
       $('a.leaflet-draw-draw-rectangle', module.el).on('click', function(e) {
