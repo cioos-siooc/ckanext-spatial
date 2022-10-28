@@ -7,7 +7,7 @@ from pylons import config
 
 from ckan import plugins as p
 
-from ckan.lib.helpers import json
+from ckan.lib.helpers import json, get_site_protocol_and_host
 
 def check_geoalchemy_requirement():
     '''Checks if a suitable geoalchemy version installed
@@ -453,12 +453,12 @@ class HarvestMetadataApi(p.SingletonPlugin):
     def before_map(self, route_map):
         controller = "ckanext.spatial.controllers.api:HarvestMetadataApiController"
 
+        protocol, host = get_site_protocol_and_host()
         # Showing the harvest object content is an action of the default
         # harvest plugin, so just redirect there
         route_map.redirect('/api/2/rest/harvestobject/{id:.*}/xml',
-            '/harvest/object/{id}',
-            _redirect_code='301 Moved Permanently',
-            protocol='https')
+            protocol + '://' + host + '/harvest/object/{id}',
+            _redirect_code='301 Moved Permanently')
 
         route_map.connect('/harvest/object/{id}/original', controller=controller,
                           action='display_xml_original')
@@ -470,9 +470,8 @@ class HarvestMetadataApi(p.SingletonPlugin):
 
         # Redirect old URL to a nicer and unversioned one
         route_map.redirect('/api/2/rest/harvestobject/:id/html',
-           '/harvest/object/{id}/html',
-            _redirect_code='301 Moved Permanently',
-            protocol='https')
+           protocol + '://' + host + '/harvest/object/{id}/html',
+            _redirect_code='301 Moved Permanently')
 
         return route_map
 
