@@ -457,7 +457,8 @@ class HarvestMetadataApi(p.SingletonPlugin):
         # harvest plugin, so just redirect there
         route_map.redirect('/api/2/rest/harvestobject/{id:.*}/xml',
             '/harvest/object/{id}',
-            _redirect_code='301 Moved Permanently')
+            _redirect_code='301 Moved Permanently',
+            protocol='https')
 
         route_map.connect('/harvest/object/{id}/original', controller=controller,
                           action='display_xml_original')
@@ -470,7 +471,8 @@ class HarvestMetadataApi(p.SingletonPlugin):
         # Redirect old URL to a nicer and unversioned one
         route_map.redirect('/api/2/rest/harvestobject/:id/html',
            '/harvest/object/{id}/html',
-            _redirect_code='301 Moved Permanently')
+            _redirect_code='301 Moved Permanently',
+            protocol='https')
 
         return route_map
 
