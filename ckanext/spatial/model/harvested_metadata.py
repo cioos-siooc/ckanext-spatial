@@ -1495,6 +1495,129 @@ class ISODocument(MappedXmlDocument):
             multiplicity="1..*",
         ),
 
+        ISOKeyword(
+            name="keyword-subject-theme",
+            search_paths=[
+                # ISO19139
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords[gmd:type/gmd:MD_KeywordTypeCode/text() = subTopicCategory]",
+                "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords[gmd:type/gmd:MD_KeywordTypeCode/text() = subTopicCategory]",
+                # ISO19115-3
+                "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = subTopicCategory]",
+                "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = subTopicCategory]",
+            ],
+            multiplicity="*",
+        ),
+
+        ISOElement(
+            name="acquisition-information",
+            search_paths=[
+                "mac:MI_AcquisitionInformation/",
+            ],
+            multiplicity="0..1",
+            elements=[
+                ISOElement(
+                    name="scope",
+                    search_paths=[
+                        "mac:scope/mcc:MD_Scope",
+                    ],
+                    multiplicity="0..1",
+                ),
+                ISOElement(
+                    name="platform",
+                    search_paths=[
+                        "mac:platform/mac:MI_Platform",
+                    ],
+                    multiplicity="0..1",
+                    elements=[
+                        ISOElement(
+                            name="identifier",
+                            search_paths=[
+                                "mac:identifier/mcc:MD_Identifier",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOElement(
+                            name="description",
+                            search_paths=[
+                                "mac:description/gco:CharacterString/text()",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOElement(
+                            name="instrument",
+                            search_paths=[
+                                "mac:instrument/mac:MI_Instrument",
+                            ],
+                            multiplicity="*",
+                            elements=[
+                                ISOElement(
+                                    name="identifier",
+                                    search_paths=[
+                                        "mac:identifier/mcc:MD_Identifier",
+                                    ],
+                                    multiplicity="0..1",
+                                ),
+                                ISOElement(
+                                    name="description",
+                                    search_paths=[
+                                        "mac:description/gco:CharacterString/text()",
+                                    ],
+                                    multiplicity="0..1",
+                                ),
+                                ISOElement(
+                                    name="type",
+                                    search_paths=[
+                                        "mac:type/gco:CharacterString/text()",
+                                    ],
+                                    multiplicity="*",
+                                ),
+
+                            ]
+                        ),
+
+                    ]
+                ),
+            ]
+        ),
+
+        ISOElement(
+            name="variable-measured",
+            search_paths=[
+                "mdb:contentInfo/mrc:MD_FeatureCatalogue/fcc:FC_FeatureCatalogue",
+            ],
+            multiplicity="0..1",
+            elements=[
+                ISOElement(
+                    name="name",
+                    search_paths=[
+                        "fcc:name???",
+                    ],
+                    multiplicity="0..1",
+                ),
+                ISOElement(
+                    name="type",
+                    search_paths=[
+                        "fcc:featureType???",
+                    ],
+                    multiplicity="0..1",
+                ),
+            ]
+        ),
+        ISOElement(
+            name="measurement-techniques",
+            search_paths=[
+                "mdb:resourceLineage/mrl:LI_Lineage[mrl:scope/mcc:MD_Scope/mcc:level/MD_ScopeCode/text() = fieldSession???]/mrl:statement/gco:CharacterString/text()",
+            ],
+            multiplicity="*",
+        ),
+        ISOElement(
+            name="provider",
+            search_paths=[
+                "mdb:resourceLineage/mrl:LI_Lineage/mrl:source/mrl:LI_Source[mrl:scope/mcc:MD_Scope/mcc:level/MD_ScopeCode/text() = metadata]",
+            ],
+            multiplicity="0..1",
+        ),
+
     ]
 
     def iso_date_time_to_utc(self, value):
@@ -1518,7 +1641,6 @@ class ISODocument(MappedXmlDocument):
                     raise
         return utc_dt.strftime('%Y-%m-%d %H:%M:%S')
 
-
     def infer_values(self, values):
         # Todo: Infer name.
         self.clean_metadata_reference_date(values)
@@ -1541,8 +1663,14 @@ class ISODocument(MappedXmlDocument):
         self.infer_guid(values)
         self.infer_temporal_vertical_extent(values)
         self.infer_citation(values)
+        self.infer_subject(values)
         self.drop_empty_objects(values)
         return values
+
+    def infer_subject(self, values):
+        topic_category = values['topic-category']
+        sub_topic_categories = values['keyword-subject-theme']
+        values['subject'] = topic_category + sub_topic_categories
 
     def infer_citation(self, values):
         value = values['citation'][0]
