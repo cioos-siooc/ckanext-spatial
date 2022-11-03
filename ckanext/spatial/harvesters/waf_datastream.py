@@ -44,7 +44,7 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
             'name': 'datastream_sitemap',
             'title': 'Sitemap Harvester for datastream ISO19115-2',
             'description': 'site map listing datasets urls with avilable iso19115-2 xml'
-            }
+        }
 
     def get_package_dict(self, iso_values, harvest_object):
 
@@ -148,19 +148,6 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
             return None
 
         sitemape_content = sitemap_response.text
-
-
-        # session = requests.Session()
-        # sitemap_response = session.get(source_url, stream=False)
-        # sitemape_content = sitemap_response.text
-
-        # add xhtml namespace to sitemap document as it's missing
-        # TODO: check if this is fixed
-        sitemape_content = sitemape_content.replace(
-            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
-            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xhtml="http://www.w3.org/1999/xhtml"'
-        )
-        # log.debug('sitemape_content: %r', sitemape_content)
 
         # convert xml content to lxml etree
         sitemap_tree = etree.fromstring(str.encode(sitemape_content))

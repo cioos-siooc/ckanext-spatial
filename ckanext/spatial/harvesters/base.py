@@ -38,6 +38,8 @@ from ckanext.spatial.model import ISODocument, ISODocument_iso19139
 from ckanext.spatial.interfaces import ISpatialHarvester
 from ckantoolkit import config
 
+from unidecode import unidecode
+
 log = logging.getLogger(__name__)
 
 DEFAULT_VALIDATOR_PROFILES = ['iso19139']
@@ -338,8 +340,10 @@ class SpatialHarvester(HarvesterBase):
                 remote_org = remote_org_name or remote_org or None
 
             if remote_org:
+                # transliterat any unicode characters in org name into something similar in ascii
+                remote_org_clean = unidecode(remote_org)
                 # ckan supports only alphanumeric with underscores and dashes in org names
-                remote_org_clean = re.sub(r"[^\w_-]+", "-",remote_org).lower()
+                remote_org_clean = re.sub(r"[^\w_-]+", "-",remote_org_clean).lower()
                 remote_org_clean = remote_org_clean.replace("--","-")
                 remote_org_clean = remote_org_clean[:100]
                 try:
@@ -424,6 +428,8 @@ class SpatialHarvester(HarvesterBase):
 
             context = {'model': model, 'session': model.Session, 'user': self._get_user_name()}
             license_list = p.toolkit.get_action('license_list')(context, {})
+            if isinstance(use_constraints, str):
+                use_constraints = [use_constraints]
 
             for constraint in use_constraints:
                 package_license = None
