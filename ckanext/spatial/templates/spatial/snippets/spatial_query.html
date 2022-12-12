@@ -19,7 +19,7 @@ e.g.
     </h2>
     {% set map_config = h.get_common_map_config() %}
   <div class="dataset-map" data-module="spatial-query" data-default_extent="{{ default_extent }}" data-pkg_geom="{{ pkg_geom }}" data-module-map_config="{{ h.dump_json(map_config) }}" data-module-spatial_widget_expands="{{ h.spatial_widget_expands() }}">
-        <div id="dataset-map-container" style="height:600px;" ></div>
+        <div id="dataset-map-container"></div>
     </div>
     <div id="dataset-map-attribution">
         {% snippet "spatial/snippets/map_attribution.html", map_config=map_config %}

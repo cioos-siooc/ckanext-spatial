@@ -38,7 +38,7 @@ this.ckan.module('spatial-query', function ($, _) {
           module.options.default_extent = user_default_extent;
         } else if (user_default_extent instanceof Object) {
           // Assume it's a GeoJSON bbox
-          module.options.default_extent = new L.GeoJSON(user_default_extent).getBounds();
+          module.options.default_extent = new L.GeoJSON(user_default_extent).getBounds().toBBoxString();
         }
       }
       this.el.ready(this._onReady);
@@ -149,30 +149,31 @@ this.ckan.module('spatial-query', function ($, _) {
       var removeAllControl = new L.Control.RemoveAll();
       map.addControl(removeAllControl);
 
-      var features = this.el.data('pkg_geom');
-      console.log(features);
+      // var features = this.el.data('pkg_geom');
+      // console.log(features);
 
-      module.options.pkg_geom = new L.geoJSON(
-        features
-        // { style: {
-        //     "color": "#33a02c",
-        //     "weight": 2,
-        //     "opacity": 1,
-        //     "fillColor": "#33a02c",
-        //     "fillOpacity": 0.1,
-        //     "clickable": false
-        //   },
-        //   onEachFeature: function (feature, layer) {
-        //     if(feature.properties && feature.properties.title && feature.geometry.type == 'Point'){
-        //       layer.bindPopup(feature.properties.title);
-        //     }
-        //   }
-        // }
-      );
+      // module.options.pkg_geom = new L.geoJSON(
+      //   features
+      //   // { style: {
+      //   //     "color": "#33a02c",
+      //   //     "weight": 2,
+      //   //     "opacity": 1,
+      //   //     "fillColor": "#33a02c",
+      //   //     "fillOpacity": 0.1,
+      //   //     "clickable": false
+      //   //   },
+      //   //   onEachFeature: function (feature, layer) {
+      //   //     if(feature.properties && feature.properties.title && feature.geometry.type == 'Point'){
+      //   //       layer.bindPopup(feature.properties.title);
+      //   //     }
+      //   //   }
+      //   // }
+      // );
 
-      if (module.options.pkg_geom){
-        module.options.default_extent = module.options.pkg_geom.getBounds();
-      }
+      // if (module.options.pkg_geom){
+      //   module.options.default_extent = module.options.pkg_geom.getBounds().toBBoxString();
+      //   console.log(module.options.default_extent)
+      // }
 
       //map.addLayer(module.options.pkg_geom);
 
@@ -186,12 +187,19 @@ this.ckan.module('spatial-query', function ($, _) {
       vectorTileStyling[vectorLayerId] =
         function(properties, zoom) {
             var level = properties.admin_level;
-            var fillOpacity = properties.polycount / 10;
-            if(fillOpacity > 1) {fillOpacity = 1;}
+            color = 'red';
+            var fillOpacity = properties.polycount / 100;
+            if(fillOpacity > 0.50) {fillOpacity = 0.50;}
+            var colorramp = properties.polycount / 100.0;
+            if(colorramp < 0.33){
+              color = 'green';
+            }else if(colorramp < 0.66){
+              color = 'yellow';
+            }         
             console.log(properties);
             return {
                 fill: true,
-                fillColor: 'blue',
+                fillColor: color,
                 fillOpacity: fillOpacity,
                 color: 'blue',
                 opacity: 0.3,
@@ -210,21 +218,21 @@ this.ckan.module('spatial-query', function ($, _) {
         .protobuf(vectorUrl, vectorTileOptions)
         .addTo(map)
 
-      vectorLayer.on('click', function (e) {
-        var properties = e.layer.properties
-        var popUpText = Object.entries(properties)
-          .map(function ([key, val]) {
-            if(Array.isArray(JSON.parse(val))){
-              val = '<li>' + JSON.parse(val).join('</li><li>') + '</li>';
-            }
-            return `${key}: ${val}`
-          })
-          .join('<br>')
-        L.popup()
-          .setContent(popUpText)
-          .setLatLng(e.latlng)
-          .openOn(map)
-      });
+      // vectorLayer.on('click', function (e) {
+      //   var properties = e.layer.properties
+      //   var popUpText = Object.entries(properties)
+      //     .map(function ([key, val]) {
+      //       if(Array.isArray(JSON.parse(val))){
+      //         val = '<li>' + JSON.parse(val).join('</li><li>') + '</li>';
+      //       }
+      //       return `${key}: ${val}`
+      //     })
+      //     .join('<br>')
+      //   L.popup()
+      //     .setContent(popUpText)
+      //     .setLatLng(e.latlng)
+      //     .openOn(map)
+      // });
 
 
 
