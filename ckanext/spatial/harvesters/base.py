@@ -686,6 +686,7 @@ class SpatialHarvester(HarvesterBase):
 
         # Get document modified date
         try:
+            log.debug(iso_values)
             metadata_modified_date = dateutil.parser.parse(iso_values['metadata-date'], ignoretz=True)
         except ValueError:
             self._save_object_error('Could not extract reference date for object {0} ({1})'

@@ -11,3 +11,4 @@ from ckanext.spatial.harvesters.csw import CSWHarvester
 from ckanext.spatial.harvesters.waf import WAFHarvester
 from ckanext.spatial.harvesters.doc import DocHarvester
 from ckanext.spatial.harvesters.geonetwork import GeoNetworkHarvester
+from ckanext.spatial.harvesters.opensearch_glos import GLOSHarvester

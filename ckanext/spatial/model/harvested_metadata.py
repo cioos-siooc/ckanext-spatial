@@ -164,7 +164,10 @@ class ISOElement(MappedXmlElement):
         "gmx": "http://www.isotc211.org/2005/gmx",
         "gsr": "http://www.isotc211.org/2005/gsr",
         "gss": "http://www.isotc211.org/2005/gss",
-        # "gco": "http://www.isotc211.org/2005/gco",
+        "gmi": "http://www.isotc211.org/2005/gmi",
+
+        #this is why we need to split harvesters need this gco for glos
+        "gco": "http://www.isotc211.org/2005/gco",
         "gmd": "http://www.isotc211.org/2005/gmd",
         # "srv": "http://www.isotc211.org/2005/srv",
         # ISO19115-3
@@ -172,11 +175,11 @@ class ISOElement(MappedXmlElement):
         "gml": "http://www.opengis.net/gml/3.2",
         "cit": "http://standards.iso.org/iso/19115/-3/cit/2.0",
         # "fcc": "http://standards.iso.org/iso/19110/fcc/1.0",
-        "gco": "http://standards.iso.org/iso/19115/-3/gco/1.0",
+        #"gco": "http://standards.iso.org/iso/19115/-3/gco/1.0",
         "gcx": "http://standards.iso.org/iso/19115/-3/gcx/1.0",
         "gex": "http://standards.iso.org/iso/19115/-3/gex/1.0",
         "lan": "http://standards.iso.org/iso/19115/-3/lan/1.0",
-        # "mac": "http://standards.iso.org/iso/19115/-3/mac/2.0",
+        "mac": "http://standards.iso.org/iso/19115/-3/mac/2.0",
         # "mas": "http://standards.iso.org/iso/19115/-3/mas/1.0",
         "mcc": "http://standards.iso.org/iso/19115/-3/mcc/1.0",
         "mco": "http://standards.iso.org/iso/19115/-3/mco/1.0",
@@ -195,7 +198,6 @@ class ISOElement(MappedXmlElement):
         "xml": "http://www.w3.org/XML/1998/namespace",
         # "xsi": "http://www.w3.org/2001/XMLSchema-instance",
         # "dqc": "http://standards.iso.org/iso/19157/-2/dqc/1.0",
-
     }
 
 
@@ -349,6 +351,8 @@ class ISOIdentifier(ISOElement):
         ISOElement(
             name="code",
             search_paths=[
+                # ISO19139
+                "gco:CharacterString/text()",
                 # ISO19115-3
                 "mcc:code/gco:CharacterString/text()",
                 "mcc:code/gcx:Anchor/text()",
@@ -507,8 +511,10 @@ class ISOReferenceDate(ISOElement):
         ISOElement(
             name="value",
             search_paths=[
+                # 19139
                 "gmd:date/gco:Date/text()",
                 "gmd:date/gco:DateTime/text()",
+                # 19115-3
                 "cit:date/gco:Date/text()",
                 "cit:date/gco:DateTime/text()",
             ],
@@ -717,7 +723,7 @@ class ISOAggregationInfo(ISOElement):
             search_paths=[
                 "gmd:aggregateDatasetName/gmd:CI_Citation/gmd:title/gco:CharacterString/text()",
                 # ISO19115-3
-                "mri:name/cit:CI_Citation/cit:title/gco:CharacterString/text()"
+                "mri:name/cit:CI_Citation/cit:title/gco:CharacterString/text()",
             ],
             multiplicity="0..1",
         ),
@@ -726,7 +732,7 @@ class ISOAggregationInfo(ISOElement):
             search_paths=[
                 "gmd:aggregateDatasetIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()",
                 # ISO19115-3
-                "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier/mcc:code/gco:CharacterString/text()"
+                "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier/mcc:code/gco:CharacterString/text()",
             ],
             multiplicity="0..1",
         ),
@@ -737,7 +743,7 @@ class ISOAggregationInfo(ISOElement):
                 "gmd:associationType/gmd:DS_AssociationTypeCode/text()",
                 # ISO19115-3
                 "mri:associationType/mri:DS_AssociationTypeCode/@codeListValue",
-                "mri:associationType/mri:DS_AssociationTypeCode/text()"
+                "mri:associationType/mri:DS_AssociationTypeCode/text()",
             ],
             multiplicity="0..1",
         ),
@@ -761,6 +767,9 @@ class ISOCitation(ISOElement):
         ISOElement(
             name="type",
             search_paths=[
+                # 19139
+                "ancestor::gmi:MI_Metadata/gmd:hierarchyLevel/gmd:MD_ScopeCode/@codeListValue",
+                "ancestor::gmi:MI_Metadata/gmd:hierarchyLevel/gmd:MD_ScopeCode/text()",                
                 # 19115-3
                 "ancestor::mdb:MD_Metadata/mdb:metadataScope/mdb:MD_MetadataScope/mdb:resourceScope/mcc:MD_ScopeCode/@codeListValue",
                 "ancestor::mdb:MD_Metadata/mdb:metadataScope/mdb:MD_MetadataScope/mdb:resourceScope/mcc:MD_ScopeCode/text()",
@@ -770,6 +779,8 @@ class ISOCitation(ISOElement):
         ISOElement(
             name="id",
             search_paths=[
+                # 19139
+                "gmd:identifier/gmd:MD_Identifier",
                 # 19115-3
                 "ancestor::mdb:MD_Metadata/mdb:metadataIdentifier/mcc:MD_Identifier",
             ],
@@ -778,6 +789,8 @@ class ISOCitation(ISOElement):
                 ISOElement(
                     name="code",
                     search_paths=[
+                        #ISO19139
+                        "gmd:code/gmd:code/gco:CharacterString/text()",
                         # ISO19115-3
                         "mcc:code/gco:CharacterString/text()",
                         "mcc:code/gcx:Anchor/text()",
@@ -787,6 +800,8 @@ class ISOCitation(ISOElement):
                 ISOElement(
                     name="authority",
                     search_paths=[
+                        # ISO19139
+                        "gmd:authority/gmd:authority/gmd:CI_Citation/gmd:CI_Citation/gmd:title/gmd:title/gco:CharacterString/text()",
                         # ISO19115-3
                         "mcc:authority/cit:CI_Citation/cit:title/gco:CharacterString/text()",
                         "mcc:authority/cit:CI_Citation/cit:title/gcx:Anchor/text()",
@@ -816,14 +831,17 @@ class ISOCitation(ISOElement):
         ISOResponsibleParty(
             name="author",
             search_paths=[
+                # 19139
+                "gmd:citedResponsibleParty/gmd:CI_ResponsibleParty[not(gmd:role/gmd:CI_RoleCode/text() = 'publisher' or gmd:role/gmd:CI_RoleCode/@codeListValue ='publisher')]",
                 # 19115-3
-                "cit:citedResponsibleParty/cit:CI_Responsibility[not(cit:role/cit:CI_RoleCode/text() = 'publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher')]"
+                "cit:citedResponsibleParty/cit:CI_Responsibility[not(cit:role/cit:CI_RoleCode/text() = 'publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher')]",
             ],
             multiplicity="1..*",
         ),
         ISOReferenceDate(
             name="issued",
             search_paths=[
+                "gmd:date/gmd:CI_Date",
                 # 19115-3
                 "cit:date/cit:CI_Date[cit:dateType/cit:CI_DateTypeCode/@codeListValue != 'creation']",
                 "ancestor::mdb:MD_Metadata/mdb:dateInfo/cit:CI_Date"
@@ -833,6 +851,7 @@ class ISOCitation(ISOElement):
         ISOLocalised(
             name="abstract",
             search_paths=[
+                "ancestor::gmi:MI_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract",
                 # ISO19115-3
                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/mri:MD_DataIdentification/mri:abstract",
                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/srv:SV_ServiceIdentification/mri:abstract",
@@ -856,6 +875,8 @@ class ISOCitation(ISOElement):
         ISOElement(
             name="publisher",
             search_paths=[
+                # 19139
+                "gmd:citedResponsibleParty/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/text() = 'publisher' or gmd:role/gmd:CI_RoleCode/@codeListValue ='publisher']",
                 # 19115-3
                 "cit:citedResponsibleParty/cit:CI_Responsibility[cit:role/cit:CI_RoleCode/text() ='publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher']/cit:party/cit:CI_Organisation/cit:name/gco:CharacterString/text()",
                 "cit:citedResponsibleParty/cit:CI_Responsibility[cit:role/cit:CI_RoleCode/text() ='publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher']/cit:party/cit:CI_Individual/cit:name/gco:CharacterString/text()",
@@ -865,6 +886,8 @@ class ISOCitation(ISOElement):
         ISOLocalised(
             name="title",
             search_paths=[
+                # 19139
+                "gmd:title",
                 # 19115-3
                 "cit:title",
             ],
@@ -947,6 +970,8 @@ class ISODocument(MappedXmlDocument):
             search_paths=[
                 "gmd:dateStamp/gco:DateTime/text()",
                 "gmd:dateStamp/gco:Date/text()",
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:DateTime/text()"
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date/text()"
                 # 19115-3
                 "mdb:dateInfo/cit:CI_Date/cit:date/gco:Date/text() | mdb:dateInfo/cit:CI_Date/cit:date/gco:DateTime/text()",
             ],
@@ -1003,7 +1028,7 @@ class ISODocument(MappedXmlDocument):
             name="guid",
             search_paths=[
                 # ISO 19139
-                "gmd:fileIdentifier/gco:CharacterString/text()",
+                "gmd:fileIdentifier"
                 # 19115-3
                 "mdb:metadataIdentifier/mcc:MD_Identifier"
             ],
@@ -1461,8 +1486,10 @@ class ISODocument(MappedXmlDocument):
         ISOCitation(
             name="citation",
             search_paths=[
+                # 19139
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation",
                 # 19115-3
-                "mdb:identificationInfo/*[contains(local-name(), 'Identification')]/mri:citation/cit:CI_Citation"
+                "mdb:identificationInfo/*[contains(local-name(), 'Identification')]/mri:citation/cit:CI_Citation",
             ],
             multiplicity="1..*",
         ),
@@ -1483,7 +1510,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="acquisition-information",
             search_paths=[
-                "mac:MI_AcquisitionInformation/",
+                "mac:MI_AcquisitionInformation",
             ],
             multiplicity="0..1",
             elements=[
@@ -1878,6 +1905,9 @@ class ISODocument(MappedXmlDocument):
         # not encode.
         out = {}
 
+        if not item:
+            return {defaultLangKey: ''}
+
         default = item.get('default').strip()
         # decode double escaped unicode chars
         default = self.unescape_unicode(default)
@@ -1998,7 +2028,9 @@ class ISODocument(MappedXmlDocument):
 
     def clean_dataset_reference_date(self, values):
         dates = []
-        for date in values['dataset-reference-date']:
+        value = values['dataset-reference-date']
+        log.debug(value)
+        for date in value:
             try:
                 date['value'] = self.iso_date_time_to_utc(date['value'])[:10]
             except Exception as e:
