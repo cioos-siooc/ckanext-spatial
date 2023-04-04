@@ -4,7 +4,7 @@ import re
 import json
 import pytz
 import datetime
-from ckan.lib.helpers import url_for
+from ckan.lib.helpers import url_for, is_url
 from copy import copy
 from collections import OrderedDict
 import six
@@ -20,7 +20,8 @@ class MappedXmlObject(object):
 
 class MappedXmlDocument(MappedXmlObject):
     def __init__(self, xml_str=None, xml_tree=None):
-        assert (xml_str or xml_tree is not None), 'Must provide some XML in one format or another'
+        assert (
+            xml_str or xml_tree is not None), 'Must provide some XML in one format or another'
         self.xml_str = xml_str
         self.xml_tree = xml_tree
 
@@ -129,7 +130,8 @@ class MappedXmlElement(MappedXmlObject):
         if self.multiplicity == "0":
             # 0 = None
             if values:
-                log.warn("Values found for element '%s' when multiplicity should be 0: %s", self.name, values)
+                log.warn(
+                    "Values found for element '%s' when multiplicity should be 0: %s", self.name, values)
             return ""
         elif self.multiplicity == "1":
             # 1 = Mandatory, maximum 1 = Exactly one
@@ -176,7 +178,7 @@ class ISOElement(MappedXmlElement):
         "gcx": "http://standards.iso.org/iso/19115/-3/gcx/1.0",
         "gex": "http://standards.iso.org/iso/19115/-3/gex/1.0",
         "lan": "http://standards.iso.org/iso/19115/-3/lan/1.0",
-        # "mac": "http://standards.iso.org/iso/19115/-3/mac/2.0",
+        "mac": "http://standards.iso.org/iso/19115/-3/mac/2.0",
         # "mas": "http://standards.iso.org/iso/19115/-3/mas/1.0",
         "mcc": "http://standards.iso.org/iso/19115/-3/mcc/1.0",
         "mco": "http://standards.iso.org/iso/19115/-3/mco/1.0",
@@ -237,6 +239,7 @@ class ISOLocalised(ISOElement):
         )
     ]
 
+
 class ISOResourceLocator(ISOElement):
 
     elements = [
@@ -269,12 +272,12 @@ class ISOResourceLocator(ISOElement):
             ],
             multiplicity="0..1",
         ),
-        ISOElement(
+        ISOLocalised(
             name="description",
             search_paths=[
                 "gmd:description/gco:CharacterString/text()",
                 # 19115-3
-                "cit:description/gco:CharacterString/text()",
+                "cit:description",
             ],
             multiplicity="0..1",
         ),
@@ -342,8 +345,9 @@ class ISOResourceLocator(ISOElement):
         )
     ]
 
+
 class ISOIdentifier(ISOElement):
-    elements=[
+    elements = [
         ISOElement(
             name="code",
             search_paths=[
@@ -383,7 +387,6 @@ class ISOIdentifier(ISOElement):
     ]
 
 
-
 class ISOResponsibleParty(ISOElement):
 
     elements = [
@@ -398,7 +401,7 @@ class ISOResponsibleParty(ISOElement):
         ISOIdentifier(
             name="individual-uri",
             search_paths=[
-                "cit:party/cit:CI_Individual/cit:partyIdentifier",
+                "cit:party/cit:CI_Individual/cit:partyIdentifier/mcc:MD_Identifier|cit:party/cit:CI_Organisation/cit:individual/cit:CI_Individual/cit:partyIdentifier/mcc:MD_Identifier",
             ],
             multiplicity="0..1",
         ),
@@ -413,7 +416,7 @@ class ISOResponsibleParty(ISOElement):
         ISOIdentifier(
             name="organisation-uri",
             search_paths=[
-                "cit:party/cit:CI_Organisation/cit:partyIdentifier",
+                "cit:party/cit:CI_Organisation/cit:partyIdentifier/mcc:MD_Identifier",
             ],
             multiplicity="0..1",
         ),
@@ -616,6 +619,7 @@ class ISOBrowseGraphic(ISOElement):
         ),
     ]
 
+
 class ISOKeyword(ISOElement):
 
     elements = [
@@ -665,6 +669,7 @@ class ISOTemporalExtent(ISOElement):
                    )
     ]
 
+
 class ISOVerticalExtent(ISOElement):
 
     elements = [
@@ -682,48 +687,6 @@ class ISOVerticalExtent(ISOElement):
                    ],
                    multiplicity="0..1"
                    )
-    ]
-
-
-class ISOIdentifier(ISOElement):
-
-    elements = [
-        ISOElement(
-            name="code",
-            search_paths=[
-                # ISO19115-3
-                "mcc:code/gco:CharacterString/text()",
-                "mcc:code/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement(
-            name="authority",
-            search_paths=[
-                # ISO19115-3
-                "mcc:authority/cit:CI_Citation/cit:title/gco:CharacterString/text()",
-                "mcc:authority/cit:CI_Citation/cit:title/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement(
-            name="code-space",
-            search_paths=[
-                # ISO19115-3
-                "mcc:codeSpace/gco:CharacterString/text()",
-                "mcc:codeSpace/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement(
-            name="version",
-            search_paths=[
-                # ISO19115-3
-                "mcc:version/gco:CharacterString/text()",
-                "mcc:version/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
     ]
 
 
@@ -760,12 +723,12 @@ class ISOAggregationInfo(ISOElement):
             ],
             multiplicity="0..1",
         ),
-        ISOElement(
+        ISOIdentifier(
             name="aggregate-dataset-identifier",
             search_paths=[
-                "gmd:aggregateDatasetIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()",
+                "gmd:aggregateDatasetIdentifier/gmd:MD_Identifier",
                 # ISO19115-3
-                "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier/mcc:code/gco:CharacterString/text()"
+                "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier"
             ],
             multiplicity="0..1",
         ),
@@ -1186,6 +1149,17 @@ class ISODocument(MappedXmlDocument):
             ],
             multiplicity="*",
         ),
+        ISOElement(
+            name="keyword-datacentre",
+            search_paths=[
+                # ISO19115-3
+                "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
+                "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/@codeListValue = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
+                "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
+                "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/@codeListValue = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
+            ],
+            multiplicity="*",
+        ),
         ISOUsage(
             name="usage",
             search_paths=[
@@ -1495,6 +1469,153 @@ class ISODocument(MappedXmlDocument):
             multiplicity="1..*",
         ),
 
+        ISOKeyword(
+            name="keyword-subject-theme",
+            search_paths=[
+                # ISO19139
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords[gmd:type/gmd:MD_KeywordTypeCode/text() = subTopicCategory]",
+                "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords[gmd:type/gmd:MD_KeywordTypeCode/text() = subTopicCategory]",
+                # ISO19115-3
+                "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = subTopicCategory]",
+                "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = subTopicCategory]",
+            ],
+            multiplicity="*",
+        ),
+
+        ISOElement(
+            name="acquisition-information",
+            search_paths=[
+                "mac:MI_AcquisitionInformation",
+            ],
+            multiplicity="0..1",
+            elements=[
+                ISOElement(
+                    name="scope",
+                    search_paths=[
+                        "mac:scope/mcc:MD_Scope",
+                    ],
+                    multiplicity="0..1",
+                    elements=[
+                        ISOElement(
+                            name="level",
+                            search_paths=[
+                                "mcc:level/MD_ScopeCode/text()",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOElement(
+                            name="description",
+                            search_paths=[
+                                "mcc:levelDescription/mcc:MD_ScopeDescription/mcc:attributes/gco:CharacterString/text()",
+                            ],
+                            multiplicity="0..1",
+                        )
+                    ]
+                ),
+                ISOElement(
+                    name="platform",
+                    search_paths=[
+                        "mac:platform/mac:MI_Platform",
+                    ],
+                    multiplicity="0..1",
+                    elements=[
+                        ISOElement(
+                            name="identifier",
+                            search_paths=[
+                                "mac:identifier/mcc:MD_Identifier",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOElement(
+                            name="description",
+                            search_paths=[
+                                "mac:description/gco:CharacterString/text()",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOElement(
+                            name="instrument",
+                            search_paths=[
+                                "mac:instrument/mac:MI_Instrument",
+                            ],
+                            multiplicity="*",
+                            elements=[
+                                ISOElement(
+                                    name="identifier",
+                                    search_paths=[
+                                        "mac:identifier/mcc:MD_Identifier",
+                                    ],
+                                    multiplicity="0..1",
+                                ),
+                                ISOElement(
+                                    name="description",
+                                    search_paths=[
+                                        "mac:description/gco:CharacterString/text()",
+                                    ],
+                                    multiplicity="0..1",
+                                ),
+                                ISOElement(
+                                    name="type",
+                                    search_paths=[
+                                        "mac:type/gco:CharacterString/text()",
+                                    ],
+                                    multiplicity="*",
+                                ),
+
+                            ]
+                        ),
+
+                    ]
+                ),
+            ]
+        ),
+
+        # # https://github.com/metadata101/iso19115-3/blob/357df0c2bfa966444fb1874d7215f83563f51ff4/src/main/plugin/iso19115-3/templates/geodata.xml#L305
+        # # https://github.com/Esri/geoportal-server/blob/master/geoportal/profiles/metadata/iso/iso19110/iso-19110-fc-template.xml#L30
+        # ISOElement(
+        #     name="variable-measured",
+        #     search_paths=[
+        #         "mdb:contentInfo/mrc:MD_FeatureCatalogue/gfc:FC_FeatureCatalogue/?????",
+        #     ],
+        #     multiplicity="0..1",
+        #     elements=[
+        #         ISOElement(
+        #             name="name",
+        #             search_paths=[
+        #                 "gfc:name???",
+        #             ],
+        #             multiplicity="0..1",
+        #         ),
+        #         ISOElement(
+        #             name="type",
+        #             search_paths=[
+        #                 "gfc:featureType???",
+        #             ],
+        #             multiplicity="0..1",
+        #         ),
+        #     ]
+        # ),
+
+        # # https://github.com/metadata101/iso19115-3/blob/357df0c2bfa966444fb1874d7215f83563f51ff4/src/main/test/resources/metadata.xml#L327
+        # # https://github.com/Esri/arcgis-pro-metadata-toolkit/blob/66cb9efc03e7d8c26d45c98098a2363025f1bb01/resources/sample%20metadata%20documents/standard%20elements/ISO%2019115_3%20content/ISO19115-3elementNames_dataset_proExportISO19115-3.xml#L1972
+        # ISOElement(
+        #     name="measurement-techniques",
+        #     search_paths=[
+        #         "mdb:resourceLineage/mrl:LI_Lineage[mrl:scope/mcc:MD_Scope/mcc:level/MD_ScopeCode/text() = fieldSession???]/mrl:statement/gco:CharacterString/text()",
+        #     ],
+        #     multiplicity="*",
+        # ),
+
+        # # https://github.com/Esri/arcgis-pro-metadata-toolkit/blob/8dc79dab89bdb0624a2c08a7e37c5f0d5147af98/resources/sample%20metadata%20documents/ArcGIS%20metadata%20editor%20location/ArcGISmetadata_editorLocation_dataset_proExportISO19115-3.xml#L2960
+        # # https://github.com/metadata101/iso19115-3/blob/357df0c2bfa966444fb1874d7215f83563f51ff4/src/main/test/resources/metadata-ISO19115-3.xml#L3327
+        # ISOElement(
+        #     name="provider",
+        #     search_paths=[
+        #         "mdb:resourceLineage/mrl:LI_Lineage/mrl:source/mrl:LI_Source[mrl:scope/mcc:MD_Scope/mcc:level/MD_ScopeCode/text() = metadata]",
+        #     ],
+        #     multiplicity="0..1",
+        # ),
+
     ]
 
     def iso_date_time_to_utc(self, value):
@@ -1502,22 +1623,26 @@ class ISODocument(MappedXmlDocument):
         post_remove = 99
         if re.search(r'[+-]\d{4}', value):
             post_remove = -5
-            timedelta = datetime.timedelta(hours=int(value[-5:][1:3]), minutes=int(value[-5:][-2:])) * (-1 if value[-5:][0] == '+' else 1)
+            timedelta = datetime.timedelta(hours=int(
+                value[-5:][1:3]), minutes=int(value[-5:][-2:])) * (-1 if value[-5:][0] == '+' else 1)
         else:
             timedelta = datetime.timedelta(hours=0, minutes=0)
         try:
-            utc_dt = datetime.datetime.strptime(value, '%Y-%m-%d')  # date alone is valid
+            utc_dt = datetime.datetime.strptime(
+                value, '%Y-%m-%d')  # date alone is valid
         except ValueError:
             try:
-                utc_dt = datetime.datetime.strptime(value[:post_remove], '%Y-%m-%dT%H:%M:%S') + timedelta
+                utc_dt = datetime.datetime.strptime(
+                    value[:post_remove], '%Y-%m-%dT%H:%M:%S') + timedelta
             except Exception as e:
                 try:
-                    utc_dt = datetime.datetime.strptime(value[:post_remove], '%Y-%m-%dT%H:%M:%S.%f') + timedelta
+                    utc_dt = datetime.datetime.strptime(
+                        value[:post_remove], '%Y-%m-%dT%H:%M:%S.%f') + timedelta
                 except Exception as e:
-                    log.debug('Could not convert datetime value %s to UTC: %s', value, e)
+                    log.debug(
+                        'Could not convert datetime value %s to UTC: %s', value, e)
                     raise
         return utc_dt.strftime('%Y-%m-%d %H:%M:%S')
-
 
     def infer_values(self, values):
         # Todo: Infer name.
@@ -1541,8 +1666,76 @@ class ISODocument(MappedXmlDocument):
         self.infer_guid(values)
         self.infer_temporal_vertical_extent(values)
         self.infer_citation(values)
+        self.infer_subject(values)
+        self.condense_uri(values)
         self.drop_empty_objects(values)
         return values
+
+    def infer_subject(self, values):
+        topic_category = values['topic-category']
+        sub_topic_categories = values['keyword-subject-theme']
+        values['subject'] = topic_category + sub_topic_categories
+
+    def get_fully_qualified_package_uri(self, uri_dict, default_code_space=None):
+        if not uri_dict:
+            return ''
+        authority = uri_dict.get('authority')
+        code_space = uri_dict.get('code-space') or default_code_space
+        code = uri_dict.get('code')
+        version = uri_dict.get('version')
+        if not code:
+            return ''
+        if is_url(code):
+            return code
+        code = '/'.join([code_space.strip('/'), code.lstrip('/')])
+        # if authority and authority not in code:
+        #     code = authority.strip('/') + '/' + code.lstrip('/')
+        if is_url(code):
+            return code
+        code = 'https://' + code.lstrip('/')
+        if is_url(code):
+            return code
+        return uri_dict.get('code')
+
+    def condense_uri_helper(self, field, values, default_code_space=None):
+        uri_field_values = values[field[0]]
+
+        if not uri_field_values or isinstance(uri_field_values, str):
+            return
+        if isinstance(uri_field_values, dict):
+            uri_field_values['code'] = self.get_fully_qualified_package_uri(
+                uri_field_values, default_code_space)
+
+        elif isinstance(uri_field_values, list):
+            for uri_field_value in uri_field_values:
+                value = uri_field_value[field[1]]
+                if not value:
+                    return
+                value['code'] = self.get_fully_qualified_package_uri(
+                    value, default_code_space)
+
+    def condense_uri(self, values):
+        fields = [
+            ['metadata-point-of-contact', 'individual-uri'],
+            ['metadata-point-of-contact', 'organisation-uri'],
+            ['cited-responsible-party', 'individual-uri'],
+            ['cited-responsible-party', 'organisation-uri'],
+            ['responsible-organisation', 'individual-uri'],
+            ['responsible-organisation', 'organisation-uri'],
+            ['distributor', 'individual-uri'],
+            ['distributor', 'organisation-uri'],
+            ['aggregation-info', 'aggregate-dataset-identifier'],
+            ['guid'],
+        ]
+        for field in fields:
+            self.condense_uri_helper(field, values)
+
+        doi_fields = [
+            ['unique-resource-identifier-full'],
+        ]
+        for field in doi_fields:
+            self.condense_uri_helper(
+                field, values, default_code_space='doi.org')
 
     def infer_citation(self, values):
         value = values['citation'][0]
@@ -1553,30 +1746,34 @@ class ISODocument(MappedXmlDocument):
             else:  # it's an object
                 dates = sorted(dates, key=lambda k: k['value'], reverse=True)
             issued_date = str(dates[0]['value'])
-            value['issued'] = [{"date-parts": [issued_date[:4], issued_date[5:7], issued_date[8:10]]}]
+            value['issued'] = [
+                {"date-parts": [issued_date[:4], issued_date[5:7], issued_date[8:10]]}]
         value['id'] = self.calculate_identifier(value['id'])
 
         # remove duplicate entries
         author_list = [
-            {"individual-name": x['individual-name'],
-             "organisation-name": x['organisation-name'],
-            } for x in value['author']]
-        author_list = [i for n, i in enumerate(author_list) if i not in author_list[n + 1:]]
+            {
+                "individual-name": x['individual-name'],
+                "organisation-name": x['organisation-name'],
+            } for x in value['author']
+        ]
+        author_list = [i for n, i in enumerate(
+            author_list) if i not in author_list[n + 1:]]
 
-        #clear author list
+        # clear author list
         value['author'] = []
 
         for author in author_list:
             ind = author.get('individual-name')
             org = author.get('organisation-name')
             if ind:
-                if ',' in ind: # string is last name first so split on commas
+                if ',' in ind:  # string is last name first so split on commas
                     name_list = ind.split(',')
                     value['author'].append({
                         "given": name_list[1].strip(),
                         "family": name_list[0]
                     })
-                else: # fall back to spliting on spaces
+                else:  # fall back to spliting on spaces
                     name_list = ind.split()
                     value['author'].append({
                         "given": ' '.join(name_list[0:-1]),
@@ -1585,14 +1782,17 @@ class ISODocument(MappedXmlDocument):
             else:
                 value['author'].append({"literal": org})
 
-        defaultLangKey = self.cleanLangKey(values.get('metadata-language', 'en'))
+        defaultLangKey = self.cleanLangKey(
+            values.get('metadata-language', 'en'))
         value['title'] = self.local_to_dict(value['title'], defaultLangKey)
-        value['abstract'] = self.local_to_dict(value['abstract'], defaultLangKey)
+        value['abstract'] = self.local_to_dict(
+            value['abstract'], defaultLangKey)
 
         identifier = values.get('unique-resource-identifier-full', {})
         if identifier:
             doi = self.calculate_identifier(identifier)
-            doi = re.sub(r'^http.*doi\.org/', '', doi, flags=re.IGNORECASE)  # strip https://doi.org/ and the like
+            # strip https://doi.org/ and the like
+            doi = re.sub(r'^http.*doi\.org/', '', doi, flags=re.IGNORECASE)
             if doi and re.match(r'^10.\d{4,9}\/[-._;()/:A-Z0-9]+$', doi, re.IGNORECASE):
                 value['DOI'] = doi
         # TODO: could we have more then one doi?
@@ -1635,7 +1835,8 @@ class ISODocument(MappedXmlDocument):
                 value['begin'] = min(blist)[:10]
                 if max(elist):
                     value['end'] = max(elist)[:10]
-                log.warn('Problem converting temporal-extent dates to utc format. Defaulting to %s and %s instead', value.get('begin',''), value.get('end',''))
+                log.warn('Problem converting temporal-extent dates to utc format. Defaulting to %s and %s instead',
+                         value.get('begin', ''), value.get('end', ''))
 
             values['temporal-extent'] = value
 
@@ -1682,10 +1883,13 @@ class ISODocument(MappedXmlDocument):
             return encoded_str
 
         while(re.search(r'\\u[0-9a-fA-F]{4}', encoded_str)):
-            if isinstance(encoded_str, str):  # encode to get bytestring as decode only works on bytes
-                encoded_str = encoded_str.encode('raw_unicode_escape').decode('unicode_escape')
+            # encode to get bytestring as decode only works on bytes
+            if isinstance(encoded_str, str):
+                encoded_str = encoded_str.encode(
+                    'raw_unicode_escape').decode('unicode_escape')
             else:  # we have bytes
-                encoded_str = encoded_str.decode().encode('raw_unicode_escape').decode('unicode_escape')
+                encoded_str = encoded_str.decode().encode(
+                    'raw_unicode_escape').decode('unicode_escape')
 
         # newline escape seem to only work with exact matches. regex did not pickup the multi escape
         encoded_str = encoded_str.replace('\\\\n', '\n')
@@ -1727,7 +1931,8 @@ class ISODocument(MappedXmlDocument):
     def infert_keywords(self, values):
         keywords = values['keywords']
 
-        defaultLangKey = self.cleanLangKey(values.get('metadata-language', 'en'))
+        defaultLangKey = self.cleanLangKey(
+            values.get('metadata-language', 'en'))
 
         value = []
         if isinstance(keywords, list):
@@ -1750,30 +1955,28 @@ class ISODocument(MappedXmlDocument):
 
     def infer_multilinguale(self, values, defaultLangKey=''):
         if not defaultLangKey:
-            defaultLangKey = self.cleanLangKey(values.get('metadata-language', 'en'))
+            defaultLangKey = self.cleanLangKey(
+                values.get('metadata-language', 'en'))
 
         for key in values:
             value = values[key]
 
             # second case used to gracfully fail if no secondary language is defined
             if (
-                isinstance(value, dict) and
-                (
-                    ('default' in value and 'local' in value and len(value) == 2) or
-                    ('default' in value and len(value) == 1)
+                isinstance(value, dict)
+                and (
+                    ('default' in value and 'local' in value and len(value) == 2)
+                    or ('default' in value and len(value) == 1)
                 )
             ):
-
                 LangDict = self.local_to_dict(values[key], defaultLangKey)
                 values[key] = json.dumps(LangDict)
 
     def infer_multilinguale_resource(self, values):
-        defaultLangKey = self.cleanLangKey(values.get('metadata-language', 'en'))
+        defaultLangKey = self.cleanLangKey(
+            values.get('metadata-language', 'en'))
         for locator in values['resource-locator']:
-            log.debug(locator)
             self.infer_multilinguale(locator, defaultLangKey)
-            log.debug(locator)
-
 
     def infer_spatial(self, values):
         geom = None
@@ -1804,7 +2007,8 @@ class ISODocument(MappedXmlDocument):
                     try:
                         geom = ogr.CreateGeometryFromJson(xmlGeom)
                     except Exception:
-                        log.error('Spatial field is not GML, WKT, or GeoJSON. Can not convert spatial field.')
+                        log.error(
+                            'Spatial field is not GML, WKT, or GeoJSON. Can not convert spatial field.')
                         pass
                         return
         if geom:
@@ -1812,7 +2016,8 @@ class ISODocument(MappedXmlDocument):
             if not values.get('bbox'):
                 extent = geom.GetEnvelope()
                 if extent:
-                    values['bbox'].append({'west': '', 'east': '', 'north': '', 'south': ''})
+                    values['bbox'].append(
+                        {'west': '', 'east': '', 'north': '', 'south': ''})
                     values['bbox'][0]['west'], values['bbox'][0]['east'], values['bbox'][0]['north'], values['bbox'][0]['south'] = extent
 
     def clean_metadata_reference_date(self, values):
@@ -1821,7 +2026,8 @@ class ISODocument(MappedXmlDocument):
             date['value'] = self.iso_date_time_to_utc(date['value'])
             dates.append(date)
         if dates:
-            dates.sort(key=lambda x: x['value'])  # sort list of objects by value attribute
+            # sort list of objects by value attribute
+            dates.sort(key=lambda x: x['value'])
             values['metadata-reference-date'] = dates
 
     def clean_dataset_reference_date(self, values):
@@ -1831,11 +2037,13 @@ class ISODocument(MappedXmlDocument):
                 date['value'] = self.iso_date_time_to_utc(date['value'])[:10]
             except Exception as e:
                 date['value'] = date['value'][:10]
-                log.warn('Problem converting dataset-reference-date to utc format. Defaulting to %s instead', date['value'])
+                log.warn(
+                    'Problem converting dataset-reference-date to utc format. Defaulting to %s instead', date['value'])
 
             dates.append(date)
         if dates:
-            dates.sort(key=lambda x: x['value'])  # sort list of objects by value attribute
+            # sort list of objects by value attribute
+            dates.sort(key=lambda x: x['value'])
             values['dataset-reference-date'] = dates
 
     def infer_date_released(self, values):
@@ -1927,6 +2135,7 @@ class ISODocument(MappedXmlDocument):
                 to_drop.append(key)
         for key in to_drop:
             del values[key]
+
 
 class GeminiDocument(ISODocument):
     '''
