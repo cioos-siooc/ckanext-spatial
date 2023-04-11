@@ -25,8 +25,13 @@ from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 import ckanext.harvest.queue as queue
 
 from ckanext.spatial.harvesters.waf import WAFHarvester
+from ckanext.harvest.queue import get_connection_redis
 
 from lxml import etree
+
+import boto3
+from copy import deepcopy
+import unicodedata
 
 log = logging.getLogger(__name__)
 
@@ -39,12 +44,39 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
 
     implements(IHarvester)
 
+    redis_translation_store = 'awsTranslations'
+    translation_method_text = 'text translated using the Amazon translate service'
+
     def info(self):
         return {
             'name': 'datastream_sitemap',
             'title': 'Sitemap Harvester for datastream ISO19115-2',
             'description': 'site map listing datasets urls with avilable iso19115-2 xml'
         }
+    
+    def translate_string(self, redis_conn, string_to_translate, source_lang='en', target_lang='fr'):
+        store_name = '%s_%s_to_%s' % (self.redis_translation_store,source_lang,target_lang)
+        # check for string in redis
+        redis_trans = redis_conn.hget(store_name,string_to_translate)
+        if redis_trans: 
+            log.debug('"%s" found in cache', string_to_translate)
+            return redis_trans
+
+        # if not exists, call aws translate
+        try:      
+            translate = boto3.client(service_name='translate', use_ssl=True)
+            aws_trans_obj = translate.translate_text(Text=string_to_translate, SourceLanguageCode=source_lang, TargetLanguageCode=target_lang)
+            aws_trans = aws_trans_obj.get('TranslatedText')
+            
+            # save translation to redis
+            if aws_trans:
+                log.debug('"%s" saved to cache', string_to_translate)
+                redis_conn.hset(store_name, mapping={string_to_translate:aws_trans})
+                return aws_trans
+        except Exception as e:
+              log.error('Could not translate text %s : %e', string_to_translate, e)
+
+        return None
 
     def get_package_dict(self, iso_values, harvest_object):
 
@@ -55,26 +87,46 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
         iso_values["citation"] = '{"fr": "%s", "en": "%s"}' % (iso_values['unique-resource-identifier'], iso_values['unique-resource-identifier'])
 
         # TODO: determin if we can set EOV to something useful
-        package_dict["eov"] = ["other"]
+        if not package_dict.get("eov"):
+            package_dict["eov"] = ["other"]
 
-        # TODO confirm license is harvested correctly
+        # call check redis for translation, call Amazon translate if needed and cache results in redis
+        redis_conn = get_connection_redis()
+       
+        # suppress tags in iso_values as we are using keywords
+        if iso_values.get('tags'):
+            iso_values['tags'] = []
 
-        # French keywords not available from DataStream so we set to 'other'
+        # French keywords auto translated
         # in some cases there are no keywords at all
         if iso_values.get('keywords'):
-            iso_values['keywords'].append({'keyword': '{"fr": "autre"}', 'type': ''})
+            for item in iso_values['keywords']:
+                keyword = json.loads(item.get('keyword','{}'))               
+                if isinstance(keyword, dict):
+                    en_string = keyword.get('en')
+                else:
+                    en_string = keyword
+                if en_string:
+                    en_string = en_string.replace('"','')
+                    en_string = unicodedata.normalize("NFKD", en_string)
+
+                    fr_string = self.translate_string(redis_conn, en_string, 'en', 'fr')
+                    item['keyword'] = '{"en": "%s", "fr": "%s"}' % (en_string,fr_string)
+            package_dict['keywords_translation_method'] = 'Keyword ' + self.translation_method_text
         else:
             iso_values['keywords'] = [{'keyword': '{"en": "other"}', 'type': ''}, {'keyword': '{"fr": "autre"}', 'type': ''}]
 
-        # French title not available from DataStream
+        # French title auto translated
         title = json.loads(package_dict["title"])
-        title['fr'] = 'none'
+        title['fr'] = self.translate_string(redis_conn, title['en'] , 'en', 'fr')
         package_dict["title"] = json.dumps(title)
+        package_dict['title_translation_method'] = 'Title ' + self.translation_method_text
 
-        # French description not available from DataStream
+        # French description auto translated
         notes = json.loads(package_dict["notes"])
-        notes['fr'] = 'none'
+        notes['fr'] = self.translate_string(redis_conn, notes['en'] , 'en', 'fr')
         package_dict["notes"] = json.dumps(notes)
+        package_dict['notes_translation_method'] = 'Description ' + self.translation_method_text
 
         # Datastream does not provide a download link in there metadata so we are
         # adding their dataset metadata page as a resource instead.

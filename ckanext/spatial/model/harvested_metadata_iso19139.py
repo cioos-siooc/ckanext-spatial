@@ -573,7 +573,8 @@ class ISOKeyword_iso19139(ISOElement_iso19139):
             name="keywords",
             search_paths=[
                 # ISO19139
-                "gmd:keyword",
+                # split keywords on commas and semicolons
+                "gmd:keyword/tokenize(./gco:CharacterString/text(), ',\s*|;\s*')",
                 # ISO19115-3
                 "mri:keyword",
             ],
@@ -1465,7 +1466,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         self.infer_contact_email(values)
         self.infer_spatial(values)
         self.infer_metadata_language(values)
-        self.infert_keywords(values)
+        self.infer_keywords(values)
         self.infer_multilinguale(values)
         self.infer_guid(values)
         self.infer_temporal_vertical_extent(values)
@@ -1654,7 +1655,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
 
         return out
 
-    def infert_keywords(self, values):
+    def infer_keywords(self, values):
         keywords = values['keywords']
 
         defaultLangKey = self.cleanLangKey(values.get('metadata-language', 'en'))
@@ -1789,11 +1790,19 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
 
     def infer_metadata_date(self, values):
         dates = values.get('metadata-date', [])
-
-        # use newest date in list
+        
         if len(dates):
+            dates.sort(reverse=False)
+            oldest = dates[0]
             dates.sort(reverse=True)
-            values['metadata-date'] = dates[0]
+            # use newest date in list
+            values['metadata-date'] = newest = dates[0]
+            # if reference date not set, populate
+            if not values.get('metadata-reference-date'):
+                values['metadata-reference-date'] = [
+                    {"type":"Creation","value":oldest[:10]},
+                    {"type":"Revision","value":newest[:10]}
+                ]
 
     def infer_url(self, values):
         value = ''

@@ -11,3 +11,4 @@ requests>=1.1.0
 six
 cioos_iso_validate@git+https://github.com/cioos-siooc/cioos-iso-validate@master#egg=cioos_iso_validate
 unidecode
+boto3
