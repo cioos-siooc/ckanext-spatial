@@ -355,7 +355,7 @@ class SpatialHarvester(HarvesterBase):
                     log.info('Organization %s is not available', remote_org)
                     if remote_orgs == 'create':
                         try:
-                            org = logic.get_action('organization_create')(base_context.copy(), {'name': remote_org_clean, 'title': remote_org})
+                            org = logic.get_action('organization_create')(base_context.copy(), {'name': remote_org_clean, 'title': remote_org, 'title_translated': '{"en":"%s", "fr":"%s"}' % (remote_org,remote_org)})
                             log.info('Organization %s has been newly created', remote_org)
                             validated_org = org['id']
                         except (e):
