@@ -97,36 +97,55 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
         if iso_values.get('tags'):
             iso_values['tags'] = []
 
-        # French keywords auto translated
+        # Keywords auto translated
         # in some cases there are no keywords at all
         if iso_values.get('keywords'):
             for item in iso_values['keywords']:
-                keyword = json.loads(item.get('keyword','{}'))               
+                keyword = json.loads(item.get('keyword','{}'))  
+                en_string = None  
+                fr_string = None    
                 if isinstance(keyword, dict):
                     en_string = keyword.get('en')
+                    fr_string = keyword.get('fr')
                 else:
                     en_string = keyword
-                if en_string:
+
+                if en_string and not fr_string:
                     en_string = en_string.replace('"','')
                     en_string = unicodedata.normalize("NFKD", en_string)
-
                     fr_string = self.translate_string(redis_conn, en_string, 'en', 'fr')
                     item['keyword'] = '{"en": "%s", "fr": "%s"}' % (en_string,fr_string)
-            package_dict['keywords_translation_method'] = 'Keyword ' + self.translation_method_text
+                    package_dict['keywords_translation_method'] = 'Keyword ' + self.translation_method_text
+                elif fr_string and not en_string:
+                    fr_string = fr_string.replace('"','')
+                    fr_string = unicodedata.normalize("NFKD", fr_string)
+                    en_string = self.translate_string(redis_conn, fr_string, 'fr', 'en')
+                    item['keyword'] = '{"en": "%s", "fr": "%s"}' % (en_string,fr_string)
+                    package_dict['keywords_translation_method'] = 'Keyword ' + self.translation_method_text
         else:
             iso_values['keywords'] = [{'keyword': '{"en": "other"}', 'type': ''}, {'keyword': '{"fr": "autre"}', 'type': ''}]
 
-        # French title auto translated
+        # Title auto translated
         title = json.loads(package_dict["title"])
-        title['fr'] = self.translate_string(redis_conn, title['en'] , 'en', 'fr')
-        package_dict["title"] = json.dumps(title)
-        package_dict['title_translation_method'] = 'Title ' + self.translation_method_text
+        if title.get('en') and not title.get('fr'):
+            title['fr'] = self.translate_string(redis_conn, title['en'] , 'en', 'fr')
+            package_dict["title"] = json.dumps(title)
+            package_dict['title_translation_method'] = 'Title ' + self.translation_method_text
+        elif title.get('fr') and not title.get('en'):
+            title['en'] = self.translate_string(redis_conn, title['fr'] , 'fr', 'en')
+            package_dict["title"] = json.dumps(title)
+            package_dict['title_translation_method'] = 'Title ' + self.translation_method_text
 
-        # French description auto translated
+        # Description auto translated
         notes = json.loads(package_dict["notes"])
-        notes['fr'] = self.translate_string(redis_conn, notes['en'] , 'en', 'fr')
-        package_dict["notes"] = json.dumps(notes)
-        package_dict['notes_translation_method'] = 'Description ' + self.translation_method_text
+        if notes.get('en') and not notes.get('fr'):
+            notes['fr'] = self.translate_string(redis_conn, notes['en'] , 'en', 'fr')
+            package_dict["notes"] = json.dumps(notes)
+            package_dict['notes_translation_method'] = 'Description ' + self.translation_method_text
+        elif notes.get('fr') and not notes.get('en'):
+            notes['en'] = self.translate_string(redis_conn, notes['fr'] , 'fr', 'en')
+            package_dict["notes"] = json.dumps(notes)
+            package_dict['notes_translation_method'] = 'Description ' + self.translation_method_text
 
         # Datastream does not provide a download link in there metadata so we are
         # adding their dataset metadata page as a resource instead.
