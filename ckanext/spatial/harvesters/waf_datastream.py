@@ -59,6 +59,8 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
         # check for string in redis
         redis_trans = redis_conn.hget(store_name,string_to_translate)
         if redis_trans: 
+            # replace non-breaking white space
+            redis_trans = redis_trans.replace(u'\u00A0',' ')
             log.debug('"%s" found in cache', string_to_translate)
             return redis_trans
 
@@ -67,6 +69,8 @@ class DatastreamSitemapHarvester(WAFHarvester, SingletonPlugin):
             translate = boto3.client(service_name='translate', use_ssl=True)
             aws_trans_obj = translate.translate_text(Text=string_to_translate, SourceLanguageCode=source_lang, TargetLanguageCode=target_lang)
             aws_trans = aws_trans_obj.get('TranslatedText')
+            # replace non-breaking white space
+            aws_trans = aws_trans.replace(u'\u00A0',' ')
             
             # save translation to redis
             if aws_trans:

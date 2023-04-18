@@ -573,8 +573,7 @@ class ISOKeyword_iso19139(ISOElement_iso19139):
             name="keywords",
             search_paths=[
                 # ISO19139
-                # split keywords on commas and semicolons
-                "gmd:keyword/tokenize(./gco:CharacterString/text(), ',\s*|;\s*')",
+                "gmd:keyword",
                 # ISO19115-3
                 "mri:keyword",
             ],
