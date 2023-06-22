@@ -2,12 +2,13 @@ from __future__ import print_function
 
 import six
 from six.moves.urllib.parse import urljoin
-from six.moves import html_parser
+# from six.moves import html_parser
 import logging
 import hashlib
 import re
 
-import dateutil.parser
+import datetime
+# import dateutil.parser
 import pyparsing as parse
 import requests
 from sqlalchemy.orm import aliased
@@ -18,16 +19,19 @@ from ckan.lib.helpers import json
 from ckan.logic import ValidationError, NotFound, get_action
 
 from ckan.plugins.core import SingletonPlugin, implements
+import ckan.plugins.toolkit as toolkit
 from ckantoolkit import config
 
 from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 import ckanext.harvest.queue as queue
+from ckanext.harvest.queue import get_connection_redis
 
 from ckanext.spatial.harvesters.base import SpatialHarvester, guess_standard
 
-from lxml import etree
+import boto3
+import unicodedata
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +44,9 @@ class GLOSHarvester(SpatialHarvester, SingletonPlugin):
 
     implements(IHarvester)
 
+    redis_translation_store = 'awsTranslations_glos'
+    translation_method_text = "text translated using the Amazon translate service / texte traduit à l'aide du service Amazon translate"
+
     def info(self):
         return {
             'name': 'GLOS iso',
@@ -47,64 +54,127 @@ class GLOSHarvester(SpatialHarvester, SingletonPlugin):
             'description': 'geoportal rest api lists datasets urls with avilable iso19115-2 xml'
             }
 
+    def translate_string(self, redis_conn, string_to_translate, source_lang='en', target_lang='fr'):
+        store_name = '%s_%s_to_%s' % (self.redis_translation_store,source_lang,target_lang)
+        # check for string in redis
+        redis_trans = redis_conn.hget(store_name,string_to_translate)
+        if redis_trans: 
+            # replace non-breaking white space
+            redis_trans = redis_trans.replace(u'\u00A0',' ')
+            log.debug('"%s" found in cache', string_to_translate)
+            return redis_trans
+
+        # if not exists, call aws translate
+        try:      
+            translate = boto3.client(service_name='translate', use_ssl=True)
+            aws_trans_obj = translate.translate_text(Text=string_to_translate, SourceLanguageCode=source_lang, TargetLanguageCode=target_lang)
+            aws_trans = aws_trans_obj.get('TranslatedText')
+            # replace non-breaking white space
+            aws_trans = aws_trans.replace(u'\u00A0',' ')
+            
+            # save translation to redis
+            if aws_trans:
+                log.debug('"%s" saved to cache', string_to_translate)
+                redis_conn.hset(store_name, mapping={string_to_translate:aws_trans})
+                return aws_trans
+        except Exception as e:
+              log.error('Could not translate text %s : %e', string_to_translate, e)
+
+        return None
+
     def get_package_dict(self, iso_values, harvest_object):
         package_dict = super(GLOSHarvester, self).get_package_dict(iso_values, harvest_object)
 
-        # iso_values["citation"] = '{"fr": "%s", "en": "%s"}' % (iso_values.get('citation-other', ''), iso_values.get('citation-other', ''))
-        # package_dict["eov"] = ["other"]
 
-        # if iso_values.get('keywords'):
-        #     iso_values['keywords'].append({'keyword': '{"fr": "autre"}', 'type': ''})
-        # else:
-        #     iso_values['keywords'] = [{'keyword': '{"en": "other"}', 'type': ''}, {'keyword': '{"fr": "autre"}', 'type': ''}]
+        # setup redis connection so we can check redis for translation, call Amazon translate 
+        # if needed and cache results in redis
+        redis_conn = get_connection_redis()
+   
+        package_dict["eov"] = ["other"]
 
-        # title = json.loads(package_dict["title"])
-        # title['fr'] = 'none'
-        # package_dict["title"] = json.dumps(title)
+        id = iso_values["unique-resource-identifier-full"]
+        if id:
+            #load citation values and change url to point to seagull erddap server
+            citation = toolkit.h.cioos_load_json(iso_values["citation"])           
+            en = toolkit.h.cioos_load_json(toolkit.h.cioos_load_json(toolkit.h.cioos_load_json(citation['en'].replace('\\"', '\"'))))
+            fr = toolkit.h.cioos_load_json(toolkit.h.cioos_load_json(toolkit.h.cioos_load_json(citation['fr'].replace('\\"', '\"'))))
+            log.debug('CITATION_EN: %r',en)
+            en0 = toolkit.h.cioos_load_json(en[0])
+            fr0 = toolkit.h.cioos_load_json(fr[0])
+            log.debug('CITATION_EN: %r',en0)
+            en0['URL'] = 'https://%s/erddap/%s/info/%s/index.html' % (id['authority'], 'en', id['code'])
+            fr0['URL'] = 'https://%s/erddap/%s/info/%s/index.html' % (id['authority'], 'fr', id['code'])
+            citation['en'] = json.dumps([en0]).replace('\"', '\\"')
+            citation['fr'] = json.dumps([fr0]).replace('\"', '\\"')
+            iso_values["citation"] = json.dumps(citation)
 
-        # notes = json.loads(package_dict["notes"])
-        # notes['fr'] = 'none'
-        # package_dict["notes"] = json.dumps(notes)
+            # GLOS uses authority instead of code-space to store the domain name
+            id['code-space'] = id['authority']
+            id['authority'] = 'GLOS'
+            iso_values["unique-resource-identifier-full"] = id
 
-        # try:
-        #     if iso_values['temporal-extent']['end'] == 'Undefined':
-        #         iso_values['temporal-extent']['end'] = ''
-        # except Exception:
-        #     pass
+        # Keywords auto translated
+        # in some cases there are no keywords at all
+        if iso_values.get('keywords'):
+            for item in iso_values['keywords']:
+                keyword = json.loads(item.get('keyword','{}'))  
+                en_string = None  
+                fr_string = None    
+                if isinstance(keyword, dict):
+                    en_string = keyword.get('en')
+                    fr_string = keyword.get('fr')
+                else:
+                    en_string = keyword
 
-        # # fix some role code errors.
-        # # TODO: check if this is fixed in original data yet?
-        # for c in iso_values.get("cited-responsible-party", []):
-        #     if c:
-        #         if c['role'] == 'Originator':
-        #             c['role'] = 'originator'
-        #         elif c['role'] == 'Collaborator':
-        #             c['role'] = 'collaborator'
-        #         elif c['role'] == 'ri_419':
-        #             c['role'] = 'collaborator'
+                if en_string and not fr_string:
+                    en_string = en_string.replace('"','')
+                    en_string = unicodedata.normalize("NFKD", en_string)
+                    fr_string = self.translate_string(redis_conn, en_string, 'en', 'fr')
+                    item['keyword'] = '{"en": "%s", "fr": "%s"}' % (en_string,fr_string)
+                    package_dict['keywords_translation_method'] = json.dumps({'en':'', 'fr':'Keyword ' + self.translation_method_text})
+                elif fr_string and not en_string:
+                    fr_string = fr_string.replace('"','')
+                    fr_string = unicodedata.normalize("NFKD", fr_string)
+                    en_string = self.translate_string(redis_conn, fr_string, 'fr', 'en')
+                    item['keyword'] = '{"en": "%s", "fr": "%s"}' % (en_string,fr_string)
+                    package_dict['keywords_translation_method'] = json.dumps({'fr':'', 'en':'Keyword ' + self.translation_method_text})
+        else:
+            iso_values['keywords'] = [{'keyword': '{"en": "other", "fr": "autre"}', 'type': ''}]
 
-        # # polar data centre does not provide a link to there data in most cases.
-        # # This block provides an email address to contact distributor if set
-        # resources = []
-        # if not iso_values.get('resource-locator'):
-        #     for d in iso_values.get('distributor', []):
-        #         resources.append({
-        #             'url': 'mailto:' + d.get('contact-info', {}).get('email', ''),
-        #             'name': 'Contact Distributor for more information',
-        #             'description': ' - '.join([d.get('individual-name'), d.get('organisation-name')]),
-        #             'resource_locator_protocol': '',
-        #             'resource_locator_function': 'information'
-        #         })
+        # Title auto translated
+        title = json.loads(package_dict["title"])
+        if title.get('en') and not title.get('fr'):
+            title['fr'] = self.translate_string(redis_conn, title['en'] , 'en', 'fr')
+            package_dict["title"] = json.dumps(title)
+            package_dict['title_translation_method'] = json.dumps({'en':'', 'fr':'Title ' + self.translation_method_text})
+        elif title.get('fr') and not title.get('en'):
+            title['en'] = self.translate_string(redis_conn, title['fr'] , 'fr', 'en')
+            package_dict["title"] = json.dumps(title)
+            package_dict['title_translation_method'] = json.dumps({'fr':'', 'en':'Title ' + self.translation_method_text})
 
-        # package_dict['resources'] = resources
+        # Description auto translated
+        notes = json.loads(package_dict["notes"])
+        if notes.get('en') and not notes.get('fr'):
+            notes['fr'] = self.translate_string(redis_conn, notes['en'] , 'en', 'fr')
+            package_dict["notes"] = json.dumps(notes)
+            package_dict['notes_translation_method'] = json.dumps({'en':'', 'fr':'Description ' + self.translation_method_text})
+        elif notes.get('fr') and not notes.get('en'):
+            notes['en'] = self.translate_string(redis_conn, notes['fr'] , 'fr', 'en')
+            package_dict["notes"] = json.dumps(notes)
+            package_dict['notes_translation_method'] = json.dumps({'fr':'', 'en':'Description ' + self.translation_method_text})
 
         # End of processing, return the modified package
         return package_dict
 
-    def search_for_datasets(self, source_url, harvest_job):
-        start = 1400
-        params = {'f':'json', 'sort':'id', 'start': str(start), 'num':'100'}
+    def search_for_datasets(self, source_url, get_changes_since, harvest_job):
+        start = 1
+        params = {'f':'json', 'sort':'id', 'start': str(start), 'num':'100', 'modified':'{0}/*'.format(get_changes_since or '*')}
+        #params = {'f':'json', 'sort':'id', 'modified':'2023-06-11T00:10:48.35/2023-06-11T00:10:48.36'}
+        
         datasets = []
+        if get_changes_since:
+            log.info('Searching for datasets modified since: %s UTC', get_changes_since)
+
         while int(params['start']) > 0:
             # Get contents
             url = source_url
@@ -124,15 +194,17 @@ class GLOSHarvester(SpatialHarvester, SingletonPlugin):
 
             for result in content['results']:
                 source_obj = result['_source']
+                datestamp = source_obj.get('sys_xmlmodified_dt') or source_obj.get('sys_created_dt') or ''
                 datasets.append(
                     {
                     'id': result['id'],
                     'xml': source_obj['sys_xml_clob'],
-                    'datestamp': source_obj.get('sys_xmlmodified_dt') or source_obj.get('sys_created_dt'),
+                    'datestamp': datestamp.replace('Z','+0000'),
                     'url': 'https://seagull-geoportal.glos.org/geoportal/rest/metadata/item/%s/xml' % result['id']
                     }
                 )
  
+            log.debug('Datasets: %r', datasets)
             params['start'] = content['nextStart']
         return datasets
   
@@ -173,10 +245,21 @@ class GLOSHarvester(SpatialHarvester, SingletonPlugin):
 
         ######  Get current list of records from source ######
 
-        # TODO: add check to api/metadata/xml/since/{date} to find datasets that have changed.
 
-        url = 'https://seagull-geoportal.glos.org/geoportal/opensearch'
-        responses = self.search_for_datasets(url, harvest_job)
+        last_error_free_job = self.last_error_free_job(harvest_job)
+        log.debug('Last error-free job: %r', last_error_free_job)
+        get_changes_since = None
+        if (last_error_free_job and not self.source_config.get('force_all', False)):
+            # Request only the datasets modified since
+            last_time = last_error_free_job.gather_started
+            # Note: SOLR works in UTC, and gather_started is also UTC, so
+            # this should work as long as local and remote clocks are
+            # relatively accurate. Going back a little earlier, just in case.
+            get_changes_since = \
+                (last_time - datetime.timedelta(hours=1)).isoformat()
+
+        # source_url = 'https://seagull-geoportal.glos.org/geoportal/opensearch'
+        responses = self.search_for_datasets(source_url, get_changes_since, harvest_job)
         harvest_response_dict = {x['url']: x for x in responses} # mapping of url harvest content
       
 
@@ -186,7 +269,10 @@ class GLOSHarvester(SpatialHarvester, SingletonPlugin):
         old_locations = set(url_to_modified_db.keys())
 
         new = harvest_locations - old_locations
-        delete = old_locations - harvest_locations
+        if self.source_config.get('force_all', False):
+            delete =  old_locations - harvest_locations
+        else:
+            delete = []
         change = old_locations & harvest_locations
 
         def create_extras(url, date, status):
@@ -233,7 +319,7 @@ class GLOSHarvester(SpatialHarvester, SingletonPlugin):
             guid=hashlib.md5(location.encode('utf8', 'ignore')).hexdigest()
             obj = HarvestObject(job=harvest_job,
                                 extras=create_extras(location,
-                                                     harvest_response_dict[location]['datestamp'],
+                                                     [location]['datestamp'],
                                                      'new'),
                                 guid=guid
                                )

@@ -170,7 +170,7 @@ class ISOElement_iso19139(MappedXmlElement_iso19139):
         "srv": "http://www.isotc211.org/2005/srv",
         # ISO19115-2
         "gmi": "http://www.isotc211.org/2005/gmi",
-        # ISO19115-3
+        # 19115-3
         "xlink": "http://www.w3.org/1999/xlink",
         "cit": "http://standards.iso.org/iso/19115/-3/cit/2.0",
         # "fcc": "http://standards.iso.org/iso/19110/fcc/1.0",
@@ -200,6 +200,44 @@ class ISOElement_iso19139(MappedXmlElement_iso19139):
 
     }
 
+
+class ISOLocalised_iso19139(ISOElement_iso19139):
+
+    elements = [
+        ISOElement_iso19139(
+            name="default",
+            search_paths=[
+                "gco:CharacterString/text()",
+            ],
+            multiplicity="0..1",
+        ),
+        ISOElement_iso19139(
+            name='local',
+            search_paths=[
+                "gmd:PT_FreeText/gmd:textGroup",
+                "lan:PT_FreeText/lan:textGroup",
+            ],
+            multiplicity="0..1",
+            elements=[
+                ISOElement_iso19139(
+                    name="value",
+                    search_paths=[
+                        "gmd:LocalisedCharacterString/text()",
+                        "lan:LocalisedCharacterString/text()",
+                    ],
+                    multiplicity="0..1",
+                ),
+                ISOElement_iso19139(
+                    name="language_code",
+                    search_paths=[
+                        "gmd:LocalisedCharacterString/@locale",
+                        "lan:LocalisedCharacterString/@locale",
+                    ],
+                    multiplicity="0..1",
+                )
+            ]
+        )
+    ]
 
 class ISOResourceLocator_iso19139(ISOElement_iso19139):
 
@@ -307,6 +345,34 @@ class ISOResourceLocator_iso19139(ISOElement_iso19139):
     ]
 
 
+class ISOIdentifier_iso19139(ISOElement_iso19139):
+
+    elements = [
+        ISOElement_iso19139(
+            name="code",
+            search_paths=[
+                "gmd:code/gmd:code/gco:CharacterString/text()",
+                "gmd:code/gco:CharacterString/text()",
+                "gmd:code/text()",
+                "gco:CharacterString/text()"
+            ],
+            multiplicity="0..1",
+        ),
+        ISOElement_iso19139(
+            name="authority",
+            search_paths=[
+                "gmd:authority/gmd:CI_Citation/gmd:title/gco:CharacterString/text()"
+            ],
+            multiplicity="0..1",
+        ),
+        ISOElement_iso19139(
+            name="code-space",
+            search_paths=[
+                "gmd:codeSpace/gco:CharacterString/text()"
+            ],
+            multiplicity="0..1",
+        ),
+    ]
 class ISOResponsibleParty_iso19139(ISOElement_iso19139):
 
     elements = [
@@ -460,9 +526,9 @@ class ISOBoundingBox_iso19139(ISOElement_iso19139):
         ISOElement_iso19139(
             name="west",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:westBoundLongitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:westBoundLongitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -470,9 +536,9 @@ class ISOBoundingBox_iso19139(ISOElement_iso19139):
         ISOElement_iso19139(
             name="east",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:eastBoundLongitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:eastBoundLongitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -480,9 +546,9 @@ class ISOBoundingBox_iso19139(ISOElement_iso19139):
         ISOElement_iso19139(
             name="north",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:northBoundLatitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:northBoundLatitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -490,9 +556,9 @@ class ISOBoundingBox_iso19139(ISOElement_iso19139):
         ISOElement_iso19139(
             name="south",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:southBoundLatitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:southBoundLatitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -527,54 +593,15 @@ class ISOBrowseGraphic_iso19139(ISOElement_iso19139):
     ]
 
 
-class ISOLocalised_iso19139(ISOElement_iso19139):
-
-    elements = [
-        ISOElement_iso19139(
-            name="default",
-            search_paths=[
-                "gco:CharacterString/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement_iso19139(
-            name='local',
-            search_paths=[
-                "gmd:PT_FreeText/gmd:textGroup",
-                "lan:PT_FreeText/lan:textGroup",
-            ],
-            multiplicity="0..1",
-            elements=[
-                ISOElement_iso19139(
-                    name="value",
-                    search_paths=[
-                        "gmd:LocalisedCharacterString/text()",
-                        "lan:LocalisedCharacterString/text()",
-                    ],
-                    multiplicity="0..1",
-                ),
-                ISOElement_iso19139(
-                    name="language_code",
-                    search_paths=[
-                        "gmd:LocalisedCharacterString/@locale",
-                        "lan:LocalisedCharacterString/@locale",
-                    ],
-                    multiplicity="0..1",
-                )
-            ]
-        )
-    ]
-
-
 class ISOKeyword_iso19139(ISOElement_iso19139):
 
     elements = [
         ISOLocalised_iso19139(
             name="keywords",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:keyword",
-                # ISO19115-3
+                # 19115-3
                 "mri:keyword",
             ],
             multiplicity="*",
@@ -582,10 +609,10 @@ class ISOKeyword_iso19139(ISOElement_iso19139):
         ISOElement_iso19139(
             name="type",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:type/gmd:MD_KeywordTypeCode/@codeListValue",
                 "gmd:type/gmd:MD_KeywordTypeCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:type/mri:MD_KeywordTypeCode/@codeListValue",
                 "mri:type/mri:MD_KeywordTypeCode/text()",
             ],
@@ -594,7 +621,6 @@ class ISOKeyword_iso19139(ISOElement_iso19139):
         # If Thesaurus information is needed at some point, this is the
         # place to add it
     ]
-
 
 class ISOTemporalExtent_iso19139(ISOElement_iso19139):
 
@@ -635,46 +661,7 @@ class ISOVerticalExtent_iso19139(ISOElement_iso19139):
     ]
 
 
-class ISOIdentifier_iso19139(ISOElement_iso19139):
 
-    elements = [
-        ISOElement_iso19139(
-            name="code",
-            search_paths=[
-                # ISO19115-3
-                "mcc:code/gco:CharacterString/text()",
-                "mcc:code/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement_iso19139(
-            name="authority",
-            search_paths=[
-                # ISO19115-3
-                "mcc:authority/cit:CI_Citation/cit:title/gco:CharacterString/text()",
-                "mcc:authority/cit:CI_Citation/cit:title/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement_iso19139(
-            name="code-space",
-            search_paths=[
-                # ISO19115-3
-                "mcc:codeSpace/gco:CharacterString/text()",
-                "mcc:codeSpace/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-        ISOElement_iso19139(
-            name="version",
-            search_paths=[
-                # ISO19115-3
-                "mcc:version/gco:CharacterString/text()",
-                "mcc:version/gcx:Anchor/text()",
-            ],
-            multiplicity="0..1",
-        ),
-    ]
 
 
 class ISOUsage_iso19139(ISOElement_iso19139):
@@ -705,17 +692,17 @@ class ISOAggregationInfo_iso19139(ISOElement_iso19139):
             name="aggregate-dataset-name",
             search_paths=[
                 "gmd:aggregateDatasetName/gmd:CI_Citation/gmd:title/gco:CharacterString/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:name/cit:CI_Citation/cit:title/gco:CharacterString/text()"
             ],
             multiplicity="0..1",
         ),
-        ISOElement_iso19139(
+        ISOIdentifier_iso19139(
             name="aggregate-dataset-identifier",
             search_paths=[
-                "gmd:aggregateDatasetIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()",
-                # ISO19115-3
-                "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier/mcc:code/gco:CharacterString/text()"
+                "gmd:aggregateDatasetIdentifier/gmd:MD_Identifier",
+                # 19115-3
+                "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier"
             ],
             multiplicity="0..1",
         ),
@@ -724,7 +711,7 @@ class ISOAggregationInfo_iso19139(ISOElement_iso19139):
             search_paths=[
                 "gmd:associationType/gmd:DS_AssociationTypeCode/@codeListValue",
                 "gmd:associationType/gmd:DS_AssociationTypeCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:associationType/mri:DS_AssociationTypeCode/@codeListValue",
                 "mri:associationType/mri:DS_AssociationTypeCode/text()"
             ],
@@ -735,7 +722,7 @@ class ISOAggregationInfo_iso19139(ISOElement_iso19139):
             search_paths=[
                 "gmd:initiativeType/gmd:DS_InitiativeTypeCode/@codeListValue",
                 "gmd:initiativeType/gmd:DS_InitiativeTypeCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:initiativeType/mri:DS_InitiativeTypeCode/@codeListValue",
                 "mri:initiativeType/mri:DS_InitiativeTypeCode/text()",
             ],
@@ -744,108 +731,81 @@ class ISOAggregationInfo_iso19139(ISOElement_iso19139):
     ]
 
 
-# class ISOCitation_iso19139(ISOElement_iso19139):
-#
-#     elements = [
-#         ISOElement_iso19139(
-#             name="type",
-#             search_paths=[
-#                 # 19115-3
-#                 "ancestor::mdb:MD_Metadata/mdb:metadataScope/mdb:MD_MetadataScope/mdb:resourceScope/mcc:MD_ScopeCode/@codeListValue",
-#                 "ancestor::mdb:MD_Metadata/mdb:metadataScope/mdb:MD_MetadataScope/mdb:resourceScope/mcc:MD_ScopeCode/text()",
-#             ],
-#             multiplicity="1",
-#         ),
-#         ISOElement_iso19139(
-#             name="id",
-#             search_paths=[
-#                 # 19115-3
-#                 "ancestor::mdb:MD_Metadata/mdb:metadataIdentifier/mcc:MD_Identifier",
-#             ],
-#             multiplicity="0..1",
-#             elements=[
-#                 ISOElement_iso19139(
-#                     name="code",
-#                     search_paths=[
-#                         # ISO19115-3
-#                         "mcc:code/gco:CharacterString/text()",
-#                         "mcc:code/gcx:Anchor/text()",
-#                     ],
-#                     multiplicity="0..1",
-#                 ),
-#                 ISOElement_iso19139(
-#                     name="authority",
-#                     search_paths=[
-#                         # ISO19115-3
-#                         "mcc:authority/cit:CI_Citation/cit:title/gco:CharacterString/text()",
-#                         "mcc:authority/cit:CI_Citation/cit:title/gcx:Anchor/text()",
-#                     ],
-#                     multiplicity="0..1",
-#                 ),
-#                 ISOElement_iso19139(
-#                     name="code-space",
-#                     search_paths=[
-#                         # ISO19115-3
-#                         "mcc:codeSpace/gco:CharacterString/text()",
-#                         "mcc:codeSpace/gcx:Anchor/text()",
-#                     ],
-#                     multiplicity="0..1",
-#                 ),
-#                 ISOElement_iso19139(
-#                     name="version",
-#                     search_paths=[
-#                         # ISO19115-3
-#                         "mcc:version/gco:CharacterString/text()",
-#                         "mcc:version/gcx:Anchor/text()",
-#                     ],
-#                     multiplicity="0..1",
-#                 ),
-#             ]
-#         ),
-#         ISOResponsibleParty_iso19139(
-#             name="author",
-#             search_paths=[
-#                 # 19115-3
-#                 "cit:citedResponsibleParty/cit:CI_Responsibility[not(cit:role/cit:CI_RoleCode/text() = 'publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher')]"
-#             ],
-#             multiplicity="1..*",
-#         ),
-#         ISOReferenceDate_iso19139(
-#             name="issued",
-#             search_paths=[
-#                 # 19115-3
-#                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/mri:MD_DataIdentification/mri:citation/cit:CI_Citation/cit:date/cit:CI_Date[cit:dateType/cit:CI_DateTypeCode/@codeListValue != 'creation']",
-#                 "ancestor::mdb:MD_Metadata/mdb:dateInfo/cit:CI_Date"
-#             ],
-#             multiplicity="1..*",
-#         ),
-#         ISOLocalised_iso19139(
-#             name="abstract",
-#             search_paths=[
-#                 # ISO19115-3
-#                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/mri:MD_DataIdentification/mri:abstract",
-#                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/srv:SV_ServiceIdentification/mri:abstract",
-#             ],
-#             multiplicity="1",
-#         ),
-#         ISOElement_iso19139(
-#             name="publisher",
-#             search_paths=[
-#                 # 19115-3
-#                 "cit:citedResponsibleParty/cit:CI_Responsibility[cit:role/cit:CI_RoleCode/text() ='publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher']/cit:party/cit:CI_Organisation/cit:name/gco:CharacterString/text()",
-#                 "cit:citedResponsibleParty/cit:CI_Responsibility[cit:role/cit:CI_RoleCode/text() ='publisher' or cit:role/cit:CI_RoleCode/@codeListValue ='publisher']/cit:party/cit:CI_Individual/cit:name/gco:CharacterString/text()",
-#             ],
-#             multiplicity="1",
-#         ),
-#         ISOLocalised_iso19139(
-#             name="title",
-#             search_paths=[
-#                 # 19115-3
-#                 "cit:title",
-#             ],
-#             multiplicity="1",
-#         ),
-#     ]
+class ISOCitation_iso19139(ISOElement_iso19139):
+
+    elements = [
+        ISOElement_iso19139(
+            name="type",
+            search_paths=[
+                # 19139
+                "ancestor::gmi:MI_Metadata/gmd:hierarchyLevel/gmd:MD_ScopeCode/@codeListValue",
+                "ancestor::gmi:MI_Metadata/gmd:hierarchyLevel/gmd:MD_ScopeCode/text()",                
+                # 19115-3
+                "ancestor::mdb:MD_Metadata/mdb:metadataScope/mdb:MD_MetadataScope/mdb:resourceScope/mcc:MD_ScopeCode/@codeListValue",
+                "ancestor::mdb:MD_Metadata/mdb:metadataScope/mdb:MD_MetadataScope/mdb:resourceScope/mcc:MD_ScopeCode/text()",
+            ],
+            multiplicity="1",
+        ),
+        ISOIdentifier_iso19139(
+            name="id",
+            search_paths=[
+                # 19139
+                "gmd:identifier/gmd:MD_Identifier",
+                # 19115-3
+                "ancestor::mdb:MD_Metadata/mdb:metadataIdentifier/mcc:MD_Identifier",
+            ],
+            multiplicity="0..1"
+        ),
+        ISOResponsibleParty_iso19139(
+            name="author",
+            search_paths=[
+                "gmd:citedResponsibleParty/gmd:CI_ResponsibleParty[not(gmd:role/gmd:CI_RoleCode/text() = 'publisher' or gmd:role/gmd:CI_RoleCode/@codeListValue ='publisher')]"
+            ],
+            multiplicity="1..*",
+        ),
+        ISOReferenceDate_iso19139(
+            name="issued",
+            search_paths=[
+                "gmd:date/gmd:CI_Date",
+            ],
+            multiplicity="1..*",
+        ),
+        ISOLocalised_iso19139(
+            name="abstract",
+            search_paths=[
+                "ancestor::gmi:MI_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract"
+            ],
+            multiplicity="1",
+        ),
+        ISOElement_iso19139(
+            name="edition",
+            search_paths=[
+                "cit:edition/gco:CharacterString/text()"
+            ],
+            multiplicity="0..1",
+        ),
+        ISOElement_iso19139(
+            name="edition-date",
+            search_paths=[
+                "cit:editionDate/gco:DateTime/text()"
+            ],
+            multiplicity="0..1",
+        ),
+        ISOElement_iso19139(
+            name="publisher",
+            search_paths=[
+                "gmd:citedResponsibleParty/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/text() = 'publisher' or gmd:role/gmd:CI_RoleCode/@codeListValue ='publisher']"
+            ],
+            multiplicity="1",
+        ),
+        ISOLocalised_iso19139(
+            name="title",
+            search_paths=[
+                "gmd:title"
+            ],
+            multiplicity="1",
+        ),
+    ]
 
 
 class ISODocument_iso19139(MappedXmlDocument_iso19139):
@@ -976,20 +936,23 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
             ],
             multiplicity="0..1",
         ),
-        ISOElement_iso19139(
+        ISOIdentifier_iso19139(
             name="guid",
             search_paths=[
                 # ISO 19139
-                "gmd:fileIdentifier/gco:CharacterString/text()",
+                "gmd:fileIdentifier",
                 # 19115-3
                 "mdb:metadataIdentifier/mcc:MD_Identifier"
             ],
             multiplicity="0..1",
         ),
-        ISOElement_iso19139(
+        ISOIdentifier_iso19139(
             # this would commonly be a DOI
             name="unique-resource-identifier-full",
             search_paths=[
+                # 19139
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier",
+                "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier",
                 # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:citation/cit:CI_Citation/cit:identifier/mcc:MD_Identifier",
                 "mdb:identificationInfo/mri:SV_ServiceIdentification/mri:citation/cit:CI_Citation/cit:identifier/mcc:MD_Identifier",
@@ -999,6 +962,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="presentation-form",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode/text()",
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode/@codeListValue",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode/text()",
@@ -1010,10 +974,10 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOLocalised_iso19139(
             name="abstract",
             search_paths=[
-                # ISO19115-3
+                # 19115-3
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:abstract",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:abstract",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:abstract",
             ],
@@ -1022,6 +986,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="purpose",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:purpose/gco:CharacterString/text()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:purpose/gco:CharacterString/text()",
             ],
@@ -1030,6 +995,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOResponsibleParty_iso19139(
             name="responsible-organisation",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty",
                 "gmd:contact/gmd:CI_ResponsibleParty",
@@ -1049,6 +1015,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="frequency-of-update",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/@codeListValue",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/@codeListValue",
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/text()",
@@ -1062,6 +1029,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="maintenance-note",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceNote/gco:CharacterString/text()",
                 "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceNote/gco:CharacterString/text()",
                 # 19115-3
@@ -1072,11 +1040,12 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="progress",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:status/gmd:MD_ProgressCode/@codeListValue",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:status/gmd:MD_ProgressCode/@codeListValue",
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:status/gmd:MD_ProgressCode/text()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:status/gmd:MD_ProgressCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:status/mcc:MD_ProgressCode/@codeListValue",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:status/mcc:MD_ProgressCode/@codeListValue",
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:status/mcc:MD_ProgressCode/text()",
@@ -1088,10 +1057,10 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOKeyword_iso19139(
             name="keywords",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords",
             ],
@@ -1190,7 +1159,7 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
             search_paths=[
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:aggregationInfo/gmd:MD_AggregateInformation",
                 "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:aggregationInfo/gmd:MD_AggregateInformation",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/*[contains(local-name(), 'Identification')]/mri:associatedResource/mri:MD_AssociatedResource"
             ],
             multiplicity="*",
@@ -1239,10 +1208,10 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="topic-category",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:topicCategory/gmd:MD_TopicCategoryCode/text()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:topicCategory/gmd:MD_TopicCategoryCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:topicCategory/mri:MD_TopicCategoryCode/text()",
             ],
             multiplicity="*",
@@ -1264,10 +1233,10 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOBoundingBox_iso19139(
             name="bbox",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/srv:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:extent/gex:EX_Extent/gex:geographicElement/gex:EX_GeographicBoundingBox",
             ],
             multiplicity="*",
@@ -1275,10 +1244,10 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         ISOElement_iso19139(
             name="spatial",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_BoundingPolygon/gmd:polygon/node()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/srv:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_BoundingPolygon/gmd:polygon/node()",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:extent/gex:EX_Extent/gex:geographicElement/gex:EX_BoundingPolygon/gex:polygon/node()",
             ],
             multiplicity="*",
@@ -1416,14 +1385,14 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
             ],
             multiplicity="1..*",
         ),
-        # ISOCitation_iso19139(
-        #     name="citation",
-        #     search_paths=[
-        #         # 19115-3
-        #         "mdb:identificationInfo/*[contains(local-name(), 'Identification')]/mri:citation/cit:CI_Citation"
-        #     ],
-        #     multiplicity="1..*",
-        # ),
+        ISOCitation_iso19139(
+            name="citation",
+            search_paths=[
+                # 19139
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation"
+            ],
+            multiplicity="1..*",
+        )
 
     ]
 
@@ -1469,82 +1438,98 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         self.infer_multilinguale(values)
         self.infer_guid(values)
         self.infer_temporal_vertical_extent(values)
-        # self.infer_citation(values)
+        self.infer_citation(values)
         self.drop_empty_objects(values)
         return values
 
-    # def infer_citation(self, values):
-    #     if isinstance(values['citation'], list):
-    #         value = values['citation'][0]
-    #     else:
-    #         value = values['citation']
-    #     if len(value['issued']):
-    #         dates = value['issued']
-    #         if isinstance(dates[0], str):
-    #             dates.sort(reverse=True)
-    #         else:  # it's an object
-    #             dates = sorted(dates, key=lambda k: k['value'], reverse=True)
-    #         issued_date = str(dates[0]['value'])
-    #         value['issued'] = [{"date-parts": [issued_date[:4], issued_date[5:7], issued_date[8:10]]}]
-    #     value['id'] = self.calculate_identifier(value['id'])
-    #
-    #     # remove duplicate entries
-    #     author_list = [
-    #         {"individual-name": x['individual-name'],
-    #          "organisation-name": x['organisation-name'],
-    #         } for x in value['author']]
-    #     author_list = [i for n, i in enumerate(author_list) if i not in author_list[n + 1:]]
+    def infer_citation(self, values):
+        value = values['citation'][0]
+        if len(value['issued']):
+            dates = value['issued']
+            if isinstance(dates[0], str):
+                dates.sort(reverse=True)
+            else:  # it's an object
+                dates = sorted(dates, key=lambda k: k['value'], reverse=True)
+            issued_date = str(dates[0]['value'])
+            value['issued'] = [
+                {"date-parts": [issued_date[:4], issued_date[5:7], issued_date[8:10]]}]
+        value['id'] = self.calculate_identifier(value['id'])
 
-        # #clear author list
-        # value['author'] = []
-        #
-        # for author in author_list:
-        #     ind = author.get('individual-name')
-        #     org = author.get('organisation-name')
-        #     if ind:
-        #         name_list = ind.split()
-        #         value['author'].append({
-        #             "given": ' '.join(name_list[0:-1]),
-        #             "family": name_list[-1]
-        #         })
-        #     else:
-        #         value['author'].append({"literal": org})
-        #
-        # defaultLangKey = self.cleanLangKey(values.get('metadata-language', 'en'))
-        # value['title'] = self.local_to_dict(value['title'], defaultLangKey)
-        # value['abstract'] = self.local_to_dict(value['abstract'], defaultLangKey)
-        #
-        # identifier = values.get('unique-resource-identifier-full', {})
-        # if identifier:
-        #     doi = self.calculate_identifier(identifier)
-        #     doi = re.sub(r'^http.*doi\.org/', '', doi, flags=re.IGNORECASE)  # strip https://doi.org/ and the like
-        #     if doi and re.match(r'^10.\d{4,9}\/[-._;()/:A-Z0-9]+$', doi, re.IGNORECASE):
-        #         value['DOI'] = doi
-        # # TODO: could we have more then one doi?
-        #
-        # field = {}
-        # for lang in ['fr', 'en']:
-        #     field[lang] = copy(value)
-        #     title = field[lang]['title']
-        #     field[lang]['title'] = title.get(lang)
-        #     abstract = field[lang]['abstract']
-        #     field[lang]['abstract'] = abstract.get(lang)
-        #     field[lang]['language'] = lang
-        #     field[lang]['URL'] = url_for(
-        #         controller='dataset',
-        #         action='read',
-        #         id=munge.munge_name(values.get('guid', '')),
-        #         local=lang,
-        #         qualified=True
-        #     )
-        #     field[lang] = json.dumps([field[lang]])
-        #     # the dump converts utf-8 escape sequences to unicode escape
-        #     # sequences so we have to convert back again
-        #     # if(field[lang] and re.search(r'\\u[0-9a-fA-F]{4}', field[lang])):
-        #     #     field[lang] = field[lang].decode("raw_unicode_escape")
-        #     # double escape any double quotes that are already escaped
-        #     field[lang] = field[lang].replace('\"', '\\"')
-        # values['citation'] = json.dumps(field)
+        # remove duplicate entries
+        author_list = [
+            {
+                "individual-name": x['individual-name'],
+                "organisation-name": x['organisation-name'],
+            } for x in value['author']
+        ]
+        author_list = [i for n, i in enumerate(
+            author_list) if i not in author_list[n + 1:]]
+
+        # clear author list
+        value['author'] = []
+
+        for author in author_list:
+            ind = author.get('individual-name')
+            org = author.get('organisation-name')
+            if ind:
+                if ',' in ind:  # string is last name first so split on commas
+                    name_list = ind.split(',')
+                    value['author'].append({
+                        "given": name_list[1].strip(),
+                        "family": name_list[0]
+                    })
+                else:  # fall back to spliting on spaces
+                    name_list = ind.split()
+                    value['author'].append({
+                        "given": ' '.join(name_list[0:-1]),
+                        "family": name_list[-1]
+                    })
+            else:
+                value['author'].append({"literal": org})
+
+        defaultLangKey = self.cleanLangKey(
+            values.get('metadata-language', 'en'))
+        value['title'] = self.local_to_dict(value['title'], defaultLangKey)
+        value['abstract'] = self.local_to_dict(
+            value['abstract'], defaultLangKey)
+
+        # change user version key rather then edition so it is displayed as 'v1.0' instead of '1st Ed'
+        if value.get('edition'):           
+            value['version'] = value['edition']
+            del value['edition']
+        elif value.get('edition-date'):
+            value['version'] = value['edition-date']
+            del value['edition-date']      
+
+        identifier = values.get('unique-resource-identifier-full', {})
+        if identifier:
+            doi = self.calculate_identifier(identifier, sep = '/')
+            # strip https://doi.org/ and the like
+            doi = re.sub(r'^http.*doi\.org/', '', doi, flags=re.IGNORECASE)
+            if doi and re.match(r'^10.\d{4,9}\/[-._;()/:A-Z0-9]+$', doi, re.IGNORECASE):
+                value['DOI'] = doi
+        # TODO: could we have more then one doi?
+
+        field = {}
+        for lang in ['fr', 'en']:
+            field[lang] = copy(value)
+            title = field[lang]['title']
+            field[lang]['title'] = title.get(lang)
+            abstract = field[lang]['abstract']
+            field[lang]['abstract'] = abstract.get(lang)
+            field[lang]['language'] = lang
+            field[lang]['URL'] = url_for(
+                controller='dataset',
+                action='read',
+                id=munge.munge_name(values.get('guid', '')),
+                local=lang,
+                qualified=True
+            )
+            field[lang] = json.dumps([field[lang]])
+
+            # double escape any double quotes that are already escaped
+            field[lang] = field[lang].replace('\"', '\\"')
+        values['citation'] = json.dumps(field)
 
     def infer_temporal_vertical_extent(self, values):
         value = {}
@@ -1583,17 +1568,17 @@ class ISODocument_iso19139(MappedXmlDocument_iso19139):
         if values.get('metadata-language'):
             values['metadata-language'] = values['metadata-language'][:2].lower()
 
-    def calculate_identifier(self, identifier):
+    def calculate_identifier(self, identifier, sep = '_'):
         if isinstance(identifier, str):
             return identifier
-        code = identifier.get('code')
-        codeSpace = identifier.get('code-space')
-        authority = identifier.get('authority')
-        version = identifier.get('version')
+        code = identifier.get('code','')
+        codeSpace = identifier.get('code-space','')
+        authority = identifier.get('authority','')
+        version = identifier.get('version','')
         guid = None
         if code:
             id_list = [authority, codeSpace, code, version]
-            guid = '_'.join(x.strip() for x in id_list if x.strip())
+            guid = sep.join(x.strip() for x in id_list if x.strip())
         return guid
 
     def infer_guid(self, values):

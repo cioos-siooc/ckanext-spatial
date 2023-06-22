@@ -172,7 +172,7 @@ class ISOElement(MappedXmlElement):
         "gco": "http://www.isotc211.org/2005/gco",
         "gmd": "http://www.isotc211.org/2005/gmd",
         # "srv": "http://www.isotc211.org/2005/srv",
-        # ISO19115-3
+        # 19115-3
         "xlink": "http://www.w3.org/1999/xlink",
         "gml": "http://www.opengis.net/gml/3.2",
         "cit": "http://standards.iso.org/iso/19115/-3/cit/2.0",
@@ -358,9 +358,12 @@ class ISOIdentifier(ISOElement):
         ISOElement(
             name="code",
             search_paths=[
-                # ISO19139
+                # 19139
+                "gmd:code/gmd:code/gco:CharacterString/text()",
+                "gmd:code/gco:CharacterString/text()",
+                "gmd:code/text()",
                 "gco:CharacterString/text()",
-                # ISO19115-3
+                # 19115-3
                 "mcc:code/gco:CharacterString/text()",
                 "mcc:code/gcx:Anchor/text()",
             ],
@@ -369,7 +372,9 @@ class ISOIdentifier(ISOElement):
         ISOElement(
             name="authority",
             search_paths=[
-                # ISO19115-3
+                 # 19139
+                "gmd:authority/gmd:CI_Citation/gmd:title/gco:CharacterString/text()",
+                # 19115-3
                 "mcc:authority/cit:CI_Citation/cit:title/gco:CharacterString/text()",
                 "mcc:authority/cit:CI_Citation/cit:title/gcx:Anchor/text()",
             ],
@@ -378,7 +383,9 @@ class ISOIdentifier(ISOElement):
         ISOElement(
             name="code-space",
             search_paths=[
-                # ISO19115-3
+                # 19139
+                "gmd:codeSpace/gco:CharacterString/text()",
+                # 19115-3
                 "mcc:codeSpace/gco:CharacterString/text()",
                 "mcc:codeSpace/gcx:Anchor/text()",
             ],
@@ -387,7 +394,7 @@ class ISOIdentifier(ISOElement):
         ISOElement(
             name="version",
             search_paths=[
-                # ISO19115-3
+                # 19115-3
                 "mcc:version/gco:CharacterString/text()",
                 "mcc:version/gcx:Anchor/text()",
             ],
@@ -564,9 +571,9 @@ class ISOBoundingBox(ISOElement):
         ISOElement(
             name="west",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:westBoundLongitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:westBoundLongitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -574,9 +581,9 @@ class ISOBoundingBox(ISOElement):
         ISOElement(
             name="east",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:eastBoundLongitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:eastBoundLongitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -584,9 +591,9 @@ class ISOBoundingBox(ISOElement):
         ISOElement(
             name="north",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:northBoundLatitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:northBoundLatitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -594,9 +601,9 @@ class ISOBoundingBox(ISOElement):
         ISOElement(
             name="south",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:southBoundLatitude/gco:Decimal/text()",
-                # ISO19115-3
+                # 19115-3
                 "gex:southBoundLatitude/gco:Decimal/text()",
             ],
             multiplicity="1",
@@ -637,9 +644,9 @@ class ISOKeyword(ISOElement):
         ISOLocalised(
             name="keywords",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:keyword",
-                # ISO19115-3
+                # 19115-3
                 "mri:keyword",
             ],
             multiplicity="*",
@@ -647,10 +654,10 @@ class ISOKeyword(ISOElement):
         ISOElement(
             name="type",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:type/gmd:MD_KeywordTypeCode/@codeListValue",
                 "gmd:type/gmd:MD_KeywordTypeCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:type/mri:MD_KeywordTypeCode/@codeListValue",
                 "mri:type/mri:MD_KeywordTypeCode/text()",
             ],
@@ -729,7 +736,7 @@ class ISOAggregationInfo(ISOElement):
             name="aggregate-dataset-name",
             search_paths=[
                 "gmd:aggregateDatasetName/gmd:CI_Citation/gmd:title/gco:CharacterString/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:name/cit:CI_Citation/cit:title/gco:CharacterString/text()",
             ],
             multiplicity="0..1",
@@ -738,7 +745,7 @@ class ISOAggregationInfo(ISOElement):
             name="aggregate-dataset-identifier",
             search_paths=[
                 "gmd:aggregateDatasetIdentifier/gmd:MD_Identifier",
-                # ISO19115-3
+                # 19115-3
                 "mri:name/cit:CI_Citation/cit:identifier/mcc:MD_Identifier"
             ],
             multiplicity="0..1",
@@ -748,7 +755,7 @@ class ISOAggregationInfo(ISOElement):
             search_paths=[
                 "gmd:associationType/gmd:DS_AssociationTypeCode/@codeListValue",
                 "gmd:associationType/gmd:DS_AssociationTypeCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:associationType/mri:DS_AssociationTypeCode/@codeListValue",
                 "mri:associationType/mri:DS_AssociationTypeCode/text()",
             ],
@@ -759,7 +766,7 @@ class ISOAggregationInfo(ISOElement):
             search_paths=[
                 "gmd:initiativeType/gmd:DS_InitiativeTypeCode/@codeListValue",
                 "gmd:initiativeType/gmd:DS_InitiativeTypeCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mri:initiativeType/mri:DS_InitiativeTypeCode/@codeListValue",
                 "mri:initiativeType/mri:DS_InitiativeTypeCode/text()",
             ],
@@ -783,7 +790,7 @@ class ISOCitation(ISOElement):
             ],
             multiplicity="1",
         ),
-        ISOElement(
+        ISOIdentifier(
             name="id",
             search_paths=[
                 # 19139
@@ -791,49 +798,7 @@ class ISOCitation(ISOElement):
                 # 19115-3
                 "ancestor::mdb:MD_Metadata/mdb:metadataIdentifier/mcc:MD_Identifier",
             ],
-            multiplicity="0..1",
-            elements=[
-                ISOElement(
-                    name="code",
-                    search_paths=[
-                        #ISO19139
-                        "gmd:code/gmd:code/gco:CharacterString/text()",
-                        # ISO19115-3
-                        "mcc:code/gco:CharacterString/text()",
-                        "mcc:code/gcx:Anchor/text()",
-                    ],
-                    multiplicity="0..1",
-                ),
-                ISOElement(
-                    name="authority",
-                    search_paths=[
-                        # ISO19139
-                        "gmd:authority/gmd:authority/gmd:CI_Citation/gmd:CI_Citation/gmd:title/gmd:title/gco:CharacterString/text()",
-                        # ISO19115-3
-                        "mcc:authority/cit:CI_Citation/cit:title/gco:CharacterString/text()",
-                        "mcc:authority/cit:CI_Citation/cit:title/gcx:Anchor/text()",
-                    ],
-                    multiplicity="0..1",
-                ),
-                ISOElement(
-                    name="code-space",
-                    search_paths=[
-                        # ISO19115-3
-                        "mcc:codeSpace/gco:CharacterString/text()",
-                        "mcc:codeSpace/gcx:Anchor/text()",
-                    ],
-                    multiplicity="0..1",
-                ),
-                ISOElement(
-                    name="version",
-                    search_paths=[
-                        # ISO19115-3
-                        "mcc:version/gco:CharacterString/text()",
-                        "mcc:version/gcx:Anchor/text()",
-                    ],
-                    multiplicity="0..1",
-                ),
-            ]
+            multiplicity="0..1"
         ),
         ISOResponsibleParty(
             name="author",
@@ -859,7 +824,7 @@ class ISOCitation(ISOElement):
             name="abstract",
             search_paths=[
                 "ancestor::gmi:MI_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract",
-                # ISO19115-3
+                # 19115-3
                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/mri:MD_DataIdentification/mri:abstract",
                 "ancestor::mdb:MD_Metadata/mdb:identificationInfo/srv:SV_ServiceIdentification/mri:abstract",
             ],
@@ -1023,6 +988,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="unique-resource-identifier",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()",
                 "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()",
                 # 19115-3
@@ -1045,6 +1011,9 @@ class ISODocument(MappedXmlDocument):
             # this would commonly be a DOI
             name="unique-resource-identifier-full",
             search_paths=[
+                # 19139
+                "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier",
+                "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier",
                 # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:citation/cit:CI_Citation/cit:identifier/mcc:MD_Identifier",
                 "mdb:identificationInfo/mri:SV_ServiceIdentification/mri:citation/cit:CI_Citation/cit:identifier/mcc:MD_Identifier",
@@ -1054,6 +1023,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="presentation-form",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode/text()",
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode/@codeListValue",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode/text()",
@@ -1065,10 +1035,10 @@ class ISODocument(MappedXmlDocument):
         ISOLocalised(
             name="abstract",
             search_paths=[
-                # ISO19115-3
+                # 19115-3
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:abstract",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:abstract",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:abstract",
             ],
@@ -1077,6 +1047,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="purpose",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:purpose/gco:CharacterString/text()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:purpose/gco:CharacterString/text()",
             ],
@@ -1085,6 +1056,7 @@ class ISODocument(MappedXmlDocument):
         ISOResponsibleParty(
             name="responsible-organisation",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty",
                 "gmd:contact/gmd:CI_ResponsibleParty",
@@ -1104,6 +1076,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="frequency-of-update",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/@codeListValue",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/@codeListValue",
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/text()",
@@ -1117,6 +1090,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="maintenance-note",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceNote/gco:CharacterString/text()",
                 "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceNote/gco:CharacterString/text()",
                 # 19115-3
@@ -1127,11 +1101,12 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="progress",
             search_paths=[
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:status/gmd:MD_ProgressCode/@codeListValue",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:status/gmd:MD_ProgressCode/@codeListValue",
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:status/gmd:MD_ProgressCode/text()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:status/gmd:MD_ProgressCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:status/mcc:MD_ProgressCode/@codeListValue",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:status/mcc:MD_ProgressCode/@codeListValue",
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:status/mcc:MD_ProgressCode/text()",
@@ -1143,10 +1118,10 @@ class ISODocument(MappedXmlDocument):
         ISOKeyword(
             name="keywords",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords",
             ],
@@ -1171,7 +1146,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="keyword-project",
             search_paths=[
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = 'project']/mri:keyword/gco:CharacterString/text()",
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/@codeListValue = 'project']/mri:keyword/gco:CharacterString/text()",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = 'project']/mri:keyword/gco:CharacterString/text()",
@@ -1182,7 +1157,7 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="keyword-datacentre",
             search_paths=[
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/@codeListValue = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = 'dataCentre']/mri:keyword/gco:CharacterString/text()",
@@ -1264,7 +1239,7 @@ class ISODocument(MappedXmlDocument):
             search_paths=[
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:aggregationInfo/gmd:MD_AggregateInformation",
                 "gmd:identificationInfo/gmd:SV_ServiceIdentification/gmd:aggregationInfo/gmd:MD_AggregateInformation",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/*[contains(local-name(), 'Identification')]/mri:associatedResource/mri:MD_AssociatedResource"
             ],
             multiplicity="*",
@@ -1313,10 +1288,10 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="topic-category",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:topicCategory/gmd:MD_TopicCategoryCode/text()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:topicCategory/gmd:MD_TopicCategoryCode/text()",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:topicCategory/mri:MD_TopicCategoryCode/text()",
             ],
             multiplicity="*",
@@ -1338,10 +1313,10 @@ class ISODocument(MappedXmlDocument):
         ISOBoundingBox(
             name="bbox",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/srv:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:extent/gex:EX_Extent/gex:geographicElement/gex:EX_GeographicBoundingBox",
             ],
             multiplicity="*",
@@ -1349,10 +1324,10 @@ class ISODocument(MappedXmlDocument):
         ISOElement(
             name="spatial",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_BoundingPolygon/gmd:polygon/node()",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/srv:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_BoundingPolygon/gmd:polygon/node()",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:extent/gex:EX_Extent/gex:geographicElement/gex:EX_BoundingPolygon/gex:polygon/node()",
             ],
             multiplicity="*",
@@ -1504,10 +1479,10 @@ class ISODocument(MappedXmlDocument):
         ISOKeyword(
             name="keyword-subject-theme",
             search_paths=[
-                # ISO19139
+                # 19139
                 "gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords[gmd:type/gmd:MD_KeywordTypeCode/text() = subTopicCategory]",
                 "gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:descriptiveKeywords/gmd:MD_Keywords[gmd:type/gmd:MD_KeywordTypeCode/text() = subTopicCategory]",
-                # ISO19115-3
+                # 19115-3
                 "mdb:identificationInfo/mri:MD_DataIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = subTopicCategory]",
                 "mdb:identificationInfo/srv:SV_ServiceIdentification/mri:descriptiveKeywords/mri:MD_Keywords[mri:type/mri:MD_KeywordTypeCode/text() = subTopicCategory]",
             ],

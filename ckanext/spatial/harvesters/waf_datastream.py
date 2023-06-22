@@ -30,7 +30,6 @@ from ckanext.harvest.queue import get_connection_redis
 from lxml import etree
 
 import boto3
-from copy import deepcopy
 import unicodedata
 
 log = logging.getLogger(__name__)
