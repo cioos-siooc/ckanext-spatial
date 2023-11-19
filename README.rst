@@ -2,8 +2,9 @@
 ckanext-spatial - Geo related plugins for CKAN
 ==============================================
 
-.. image:: https://travis-ci.org/ckan/ckanext-spatial.svg?branch=master
-    :target: https://travis-ci.org/ckan/ckanext-spatial
+.. image:: https://github.com/ckan/ckanext-spatial/workflows/Tests/badge.svg?branch=master
+    :target: https://github.com/ckan/ckanext-spatial/actions
+
 
 This extension contains plugins that add geospatial capabilities to CKAN_,
 including:
@@ -20,7 +21,7 @@ been moved to ckanext-geoview_.
 
 Full documentation, including installation instructions, can be found at:
 
-http://docs.ckan.org/projects/ckanext-spatial
+https://docs.ckan.org/projects/ckanext-spatial/en/latest/
 
 CIOOS-SIOOC Changes
 ===================
@@ -74,14 +75,19 @@ CIOOS-SIOOC Changes
   [08cc41b](https://github.com/cioos-siooc/ckanext-spatial/commit/08cc41b414c513c2f5ff53dfa556cd8829ad4f31),
   [b404f2e](https://github.com/cioos-siooc/ckanext-spatial/commit/b404f2e822109126609529d7c5d9aad32f69295a),
   [8ac08f9](https://github.com/cioos-siooc/ckanext-spatial/commit/8ac08f95ce79f3b51fc01a5d51a902d32415aaca)
+* add 'parser' harvester config option to control which iso model is used. Valid values are 'iso19139' and 'iso19115'.
+  parser defaults to using the iso19115 model if not set
+* split the harvest_metadata.py file into a defailt iso19115 version and a iso19139 version to
+  make it easier to manage harvesting using these two standards
+* add a DataStreams specific waf harvester that scrapes a sitemap to find its datasets
 
 
 Community
 ---------
 
-* Developer mailing list: `ckan-dev@lists.okfn.org <http://lists.okfn.org/mailman/listinfo/ckan-dev>`_
-* Developer IRC channel: `#ckan on irc.freenode.net <http://webchat.freenode.net/?channels=ckan>`_
-* `Issue tracker <https://github.com/okfn/ckanext-spatial/issues>`_
+* `Developer mailing list <https://groups.google.com/a/ckan.org/forum/#!forum/ckan-dev>`_
+* `Gitter channel <https://gitter.im/ckan/chat>`_
+* `Issue tracker <https://github.com/ckan/ckanext-spatial/issues>`_
 
 
 Contributing
@@ -89,13 +95,13 @@ Contributing
 
 For contributing to ckanext-spatial or its documentation, follow the same
 guidelines that apply to CKAN core, described in
-`CONTRIBUTING <https://github.com/okfn/ckan/blob/master/CONTRIBUTING.rst>`_.
+`CONTRIBUTING <https://github.com/ckan/ckan/blob/master/CONTRIBUTING.rst>`_.
 
 
 Copying and License
 -------------------
 
-This material is copyright (c) 2006-2016 Open Knowledge Foundation.
+This material is copyright (c) 2011-2021 Open Knowledge Foundation and contributors.
 
 It is open and licensed under the GNU Affero General Public License (AGPL) v3.0
 whose full text may be found at:
