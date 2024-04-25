@@ -176,9 +176,6 @@ this.ckan.module('spatial-query', function ($, _) {
       var removeAllControl = new L.Control.RemoveAll();
       map.addControl(removeAllControl);
 
-      var features = this.el.data("dataset_extents");
-      var ra_features = this.el.data("ra_extents");
-
       var orangeIcon = new L.Icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
@@ -190,7 +187,17 @@ this.ckan.module('spatial-query', function ($, _) {
         shadowSize: [21, 21],
       });
 
-      module.options.dataset_extents = new L.geoJSON(features, {
+      module.options.dataset_extents = L.geoJson.ajax(this.el.data("dataset_extents_url"), {
+        middleware: function (data) {
+          console.log(data);
+          const json = data.results.map((feature) => ({
+              "type": "Feature",
+              "geometry": JSON.parse(feature.spatial)
+            })
+          )
+          console.log(json);
+          return json;
+        },
         style: {
           color: "#fab700",
           weight: 2,
@@ -205,15 +212,12 @@ this.ckan.module('spatial-query', function ($, _) {
           }
           return;
         },
-        // onEachFeature: function (feature, layer) {
-        //   if(feature.properties && feature.properties.title){
-        //     layer.bindPopup(feature.properties.title);
-        //   }
-        // }
+
       });
 
-      if(ra_features){
-        module.options.ra_extents = new L.geoJSON(ra_features, {
+      var ra_features_url = this.el.data("ra_extents_url")
+      if (ra_features_url){
+        module.options.ra_extents = L.geoJson.ajax(ra_features_url, {
           style: {
             color: "#3264a8",
             weight: 2,
@@ -236,7 +240,7 @@ this.ckan.module('spatial-query', function ($, _) {
         map.addLayer(module.options.dataset_extents);
       }
 
-      if (ext_layers && ext_layers.includes("ra_extents") && ra_features) {
+      if (ext_layers && ext_layers.includes("ra_extents") && ra_features_url) {
         map.addLayer(module.options.ra_extents);
       }
 
@@ -248,7 +252,7 @@ this.ckan.module('spatial-query', function ($, _) {
         .setPosition("topleft")
         .addTo(map);   
 
-      if(ra_features){
+      if (ra_features_url){
         layerControl.addOverlay(
           module.options.ra_extents,
           "<span>Regional Associations</span>"
@@ -266,7 +270,6 @@ this.ckan.module('spatial-query', function ($, _) {
            return [value, "ra_extents"].filter(Boolean).join(",");
           });
         }
-        console.log($("#ext_layers").val());
       });
 
       map.on("overlayremove", function (ev) {
@@ -280,17 +283,7 @@ this.ckan.module('spatial-query', function ($, _) {
            return value.replace('ra_extents', '').split(',').filter(Boolean).join(',');
           });
         }
-        console.log($("#ext_layers").val());
       });
-
-      // map.on("enterFullscreen", function () {
-      //   map.addControl(layerControl);
-      // });
-
-      // map.on("exitFullscreen", function () {
-      //   //map.removeLayer(module.options.dataset_extents);
-      //   map.removeControl(layerControl);
-      // });
 
       // When user finishes drawing the box, record it and add it to the map
       map.on("draw:created", function (e) {
