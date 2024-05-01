@@ -895,7 +895,8 @@ class ISOLineage(ISOElement):
             name="scope",
             search_paths=[
                 # 19115-3
-                "mrl:scope/mcc:MD_Scope/mcc:level/mcc:MD_ScopeCode@codeListValue",
+                "mrl:scope/mcc:MD_Scope/mcc:level/mcc:MD_ScopeCode/@codeListValue",
+                "mrl:scope/mcc:MD_Scope/mcc:level/mcc:MD_ScopeCode/text()",
             ],
             multiplicity="1",
         ),
