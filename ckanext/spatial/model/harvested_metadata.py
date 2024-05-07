@@ -719,12 +719,12 @@ class ISOUsage(ISOElement):
 class ISOAggregationInfo(ISOElement):
 
     elements = [
-        ISOElement(
+        ISOLocalised(
             name="aggregate-dataset-name",
             search_paths=[
-                "gmd:aggregateDatasetName/gmd:CI_Citation/gmd:title/gco:CharacterString/text()",
+                "gmd:aggregateDatasetName/gmd:CI_Citation/gmd:title",
                 # ISO19115-3
-                "mri:name/cit:CI_Citation/cit:title/gco:CharacterString/text()",
+                "mri:name/cit:CI_Citation/cit:title",
             ],
             multiplicity="0..1",
         ),
@@ -881,13 +881,12 @@ class ISOCitation(ISOElement):
 
 class ISOLineage(ISOElement):
     elements=[
-
-        ISOElement(
+        ISOLocalised(
             name="statment",
             search_paths=[
                 "gmd:statement/gco:CharacterString/text()",
                 # 19115-3
-                "mrl:statement/gco:CharacterString/text()",
+                "mrl:statement",
             ],
             multiplicity="0..1",
         ),
@@ -900,39 +899,89 @@ class ISOLineage(ISOElement):
             ],
             multiplicity="1",
         ),
-        ISOCitation(
+        ISOElement(
             name="additional-documentation",
             search_paths=[
                 # 19115-3
                 "mrl:additionalDocumentation/cit:CI_Citation",
             ],
             multiplicity="*",
+            elements=[
+                ISOLocalised(
+                    name="title",
+                    search_paths=[
+                        # 19115-3
+                        "cit:title",
+                    ],
+                    multiplicity="1",
+                ),
+                ISOIdentifier(
+                    name="identifier",
+                    search_paths=[
+                        # 19115-3
+                        "cit:identifier/mcc:MD_Identifier",
+                    ],
+                    multiplicity="0..1",
+                ),
+                ISOResourceLocator(
+                    name="onlineResource",
+                    search_paths=[
+                        # 19115-3
+                        "cit:onlineResource/cit:CI_OnlineResource",
+                    ],
+                    multiplicity="0..1",
+                ),
+            ],
         ),
-
-   
         ISOElement(
             name="source",
             search_paths=[
                 # 19115-3
-                "mrl:source>/mrl:LI_Source",
+                "mrl:source/mrl:LI_Source",
             ],
             multiplicity="*",
             elements=[
-                ISOElement(
+                ISOLocalised(
                     name="description",
                     search_paths=[
                         # 19115-3
-                        "mrl:description/gco:CharacterString/text()",
+                        "mrl:description",
                     ],
                     multiplicity="0..1",
                 ),
-                ISOCitation(
-                    name="link",
+                ISOElement(
+                    name="citation",
                     search_paths=[
                         # 19115-3
                         "mrl:sourceCitation/cit:CI_Citation",
                     ],
                     multiplicity="0..1",
+                    elements=[
+                        ISOLocalised(
+                            name="title",
+                            search_paths=[
+                                # 19115-3
+                                "cit:title",
+                            ],
+                            multiplicity="1",
+                        ),
+                        ISOIdentifier(
+                            name="identifier",
+                            search_paths=[
+                                # 19115-3
+                                "cit:identifier/mcc:MD_Identifier",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOResourceLocator(
+                            name="onlineResource",
+                            search_paths=[
+                                # 19115-3
+                                "cit:onlineResource/cit:CI_OnlineResource",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                    ]
                 ),
             ]
         ),
@@ -944,21 +993,47 @@ class ISOLineage(ISOElement):
             ],
             multiplicity="*",
             elements=[
-                ISOElement(
+                ISOLocalised(
                     name="description",
                     search_paths=[
                         # 19115-3
-                        "mrl:description/gco:CharacterString/text()",
+                        "mrl:description",
                     ],
                     multiplicity="0..1",
                 ),
-                ISOCitation(
+                ISOElement(
                     name="reference",
                     search_paths=[
                         # 19115-3
                         "mrl:reference/cit:CI_Citation",
                     ],
                     multiplicity="0..1",
+                    elements=[
+                        ISOLocalised(
+                            name="title",
+                            search_paths=[
+                                # 19115-3
+                                "cit:title",
+                            ],
+                            multiplicity="1",
+                        ),
+                        ISOIdentifier(
+                            name="identifier",
+                            search_paths=[
+                                # 19115-3
+                                "cit:identifier/mcc:MD_Identifier",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                        ISOResourceLocator(
+                            name="onlineResource",
+                            search_paths=[
+                                # 19115-3
+                                "cit:onlineResource/cit:CI_OnlineResource",
+                            ],
+                            multiplicity="0..1",
+                        ),
+                    ]
                 ),
             ]
         ),
@@ -1765,6 +1840,8 @@ class ISODocument(MappedXmlDocument):
         self.infer_keywords(values)
         self.infer_multilinguale(values)
         self.infer_multilinguale_resource(values)
+        self.infer_aggregation_info(values)
+        self.infer_lineage(values)        
         self.infer_guid(values)
         self.infer_temporal_vertical_extent(values)
         self.infer_citation(values)
@@ -2096,8 +2173,9 @@ class ISODocument(MappedXmlDocument):
             ):
                 LangDict = self.local_to_dict(values[key], defaultLangKey)
                 values[key] = json.dumps(LangDict)
-
                 local = value.get('local')
+                if isinstance(local, list) and local:
+                    local = local[0]
                 if isinstance(local, dict):
                     langKey = self.cleanLangKey(local.get('language_code'))
                     transMethod = local.get('translation_method')
@@ -2109,6 +2187,35 @@ class ISODocument(MappedXmlDocument):
             values.get('metadata-language', 'en'))
         for locator in values['resource-locator']:
             self.infer_multilinguale(locator, defaultLangKey)
+
+    def infer_aggregation_info(self, values):
+        defaultLangKey = self.cleanLangKey(
+            values.get('metadata-language', 'en'))
+        for aggregate in values['aggregation-info']:
+            self.infer_multilinguale(aggregate, defaultLangKey)
+
+    def infer_lineage(self, values):
+        defaultLangKey = self.cleanLangKey(
+            values.get('metadata-language', 'en'))
+        for lineage in values['lineage']:
+            self.infer_multilinguale(lineage, defaultLangKey)
+
+            for source in lineage['source']:
+                self.infer_multilinguale(source, defaultLangKey)
+                self.infer_multilinguale(
+                    source['citation'], defaultLangKey)
+            lineage['source'] = [json.dumps(source) for source in lineage['source']]
+
+            for additionalDocumentation in lineage['additional-documentation']:
+                self.infer_multilinguale(
+                    additionalDocumentation, defaultLangKey)
+            lineage['additional-documentation'] = [json.dumps(additionalDocumentation) for additionalDocumentation in lineage['additional-documentation']]
+
+            for processingStep in lineage['processing-step']:
+                self.infer_multilinguale(processingStep, defaultLangKey)
+                self.infer_multilinguale(
+                    processingStep['reference'], defaultLangKey)
+            lineage['processing-step'] = [json.dumps(processingStep) for processingStep in lineage['processing-step']]                
 
     def infer_spatial(self, values):
         geom = None
