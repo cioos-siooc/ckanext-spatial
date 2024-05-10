@@ -108,8 +108,8 @@
       }
 
       let urls = []
-      if (mapConfig.geoJsonLayerURLs) {
-        urls = JSON.parse(mapConfig.geoJsonLayerURLs);
+      if (mapConfig.geojsonlayerurls) {
+        urls = JSON.parse(mapConfig.geojsonlayerurls);
         var GJLayers = L.layerGroup().addTo(map)
         for(const [i, url] of urls.entries()){
           fetch(
