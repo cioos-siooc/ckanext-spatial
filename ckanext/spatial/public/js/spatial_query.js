@@ -189,7 +189,10 @@ this.ckan.module('spatial-query', function ($, _) {
 
       module.options.dataset_extents = L.geoJson.ajax(this.el.data("dataset_extents_url"), {
         middleware: function (data) {
-          const json = data.results.map((feature) => ({
+          const filtered_data = data.results.filter(
+            obj => !(obj && Object.keys(obj).length === 0 && obj.constructor === Object)
+          );
+          const json = filtered_data.map((feature) => ({
               "type": "Feature",
               "geometry": JSON.parse(feature.spatial)
             })
