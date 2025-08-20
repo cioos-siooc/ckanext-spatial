@@ -173,10 +173,11 @@ class SpatialMetadata(p.SingletonPlugin):
 
 class SpatialQuery(SpatialQueryMixin, p.SingletonPlugin):
 
-    p.implements(p.IRoutes, inherit=True)
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.IConfigurable, inherit=True)
     p.implements(p.IActions)
+    # IBlueprint is handled by SpatialQueryMixin for CKAN 2.9+
+    # IRoutes was removed in CKAN 2.11+
 
     search_backend = None
 
