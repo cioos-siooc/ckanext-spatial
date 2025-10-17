@@ -1,5 +1,5 @@
-import six
 import logging
+<<<<<<< HEAD
 import re
 from string import Template
 
@@ -11,6 +11,10 @@ import shapely
 from ckanext.spatial.geoalchemy_common import (WKTElement, ST_Transform,
                                                compare_geometry_fields,
                                                )
+=======
+import ckantoolkit as tk
+
+>>>>>>> origin/master
 config = tk.config
 
 log = logging.getLogger(__name__)
@@ -18,23 +22,22 @@ log = logging.getLogger(__name__)
 
 def get_srid(crs):
     """Returns the SRID for the provided CRS definition
-        The CRS can be defined in the following formats
-        - urn:ogc:def:crs:EPSG::4326
-        - EPSG:4326
-        - 4326
-       """
+    The CRS can be defined in the following formats
+    - urn:ogc:def:crs:EPSG::4326
+    - EPSG:4326
+    - 4326
+    """
 
-    if ':' in crs:
-        crs = crs.split(':')
-        srid = crs[len(crs)-1]
+    if ":" in crs:
+        crs = crs.split(":")
+        srid = crs[len(crs) - 1]
     else:
-       srid = crs
+        srid = crs
 
     return int(srid)
 
-def save_package_extent(package_id, geometry = None, srid = None):
-    '''Adds, updates or deletes the package extent geometry.
 
+<<<<<<< HEAD
        package_id: Package unique identifier
        geometry: a Python object implementing the Python Geo Interface
                 (i.e a loaded GeoJSON object)
@@ -112,60 +115,66 @@ def validate_polygon(poly_wkt):
 def validate_bbox(bbox_values):
     '''
     Ensures a bbox is expressed in a standard dict.
+=======
+def normalize_bbox(bbox_values):
+    """
+    Ensures a bbox is expressed in a standard dict
+>>>>>>> origin/master
 
     bbox_values may be:
            a string: "-4.96,55.70,-3.78,56.43"
            or a list [-4.96, 55.70, -3.78, 56.43]
            or a list of strings ["-4.96", "55.70", "-3.78", "56.43"]
-    and returns a dict:
-           {'minx': -4.96,
-            'miny': 55.70,
-            'maxx': -3.78,
-            'maxy': 56.43}
 
-    Any problems and it returns None.
-    '''
+    ordered as MinX, MinY, MaxX, MaxY.
 
-    if isinstance(bbox_values,six.string_types):
-        bbox_values = bbox_values.split(',')
+    Returns a dict with the keys:
+
+       {
+            "minx": -4.96,
+            "miny": 55.70,
+            "maxx": -3.78,
+            "maxy": 56.43
+        }
+
+    If there are any problems parsing the input it returns None.
+    """
+
+    if isinstance(bbox_values, str):
+        bbox_values = bbox_values.split(",")
 
     if len(bbox_values) != 4:
         return None
 
     try:
         bbox = {}
-        bbox['minx'] = float(bbox_values[0])
-        bbox['miny'] = float(bbox_values[1])
-        bbox['maxx'] = float(bbox_values[2])
-        bbox['maxy'] = float(bbox_values[3])
-    except ValueError as e:
+        bbox["minx"] = float(bbox_values[0])
+        bbox["miny"] = float(bbox_values[1])
+        bbox["maxx"] = float(bbox_values[2])
+        bbox["maxy"] = float(bbox_values[3])
+    except ValueError:
         return None
 
     return bbox
 
-def _bbox_2_wkt(bbox, srid):
-    '''
-    Given a bbox dictionary, return a WKTSpatialElement, transformed
-    into the database\'s CRS if necessary.
 
-    returns e.g. WKTSpatialElement("POLYGON ((2 0, 2 1, 7 1, 7 0, 2 0))", 4326)
-    '''
-    db_srid = int(config.get('ckan.spatial.srid', '4326'))
+def fit_bbox(bbox_dict):
+    """
+    Ensures that all coordinates in a bounding box
+    fall within -180, -90, 180, 90 degrees
 
-    bbox_template = Template('POLYGON (($minx $miny, $minx $maxy, $maxx $maxy, $maxx $miny, $minx $miny))')
+    Accepts a dict with the following keys:
 
-    wkt = bbox_template.substitute(minx=bbox['minx'],
-                                        miny=bbox['miny'],
-                                        maxx=bbox['maxx'],
-                                        maxy=bbox['maxy'])
+       {
+            "minx": -4.96,
+            "miny": 55.70,
+            "maxx": -3.78,
+            "maxy": 56.43
+        }
 
-    if srid and srid != db_srid:
-        # Input geometry needs to be transformed to the one used on the database
-        input_geometry = ST_Transform(WKTElement(wkt,srid),db_srid)
-    else:
-        input_geometry = WKTElement(wkt,db_srid)
-    return input_geometry
+    """
 
+<<<<<<< HEAD
 def polygon_query(wkt, srid=None):
     '''
     Performs a spatial query of a bounding box.
@@ -199,51 +208,49 @@ def polygon_query(wkt, srid=None):
 def bbox_query(bbox,srid=None):
     '''
     Performs a spatial query of a bounding box.
+=======
+    def _adjust_longitude(value):
+        if value < -180 or value > 180:
+            value = value % 360
+            if value < -180:
+                value = 360 + value
+            elif value > 180:
+                value = -360 + value
+        return value
+>>>>>>> origin/master
 
-    bbox - bounding box dict
+    def _adjust_latitude(value):
+        if value < -90 or value > 90:
+            value = value % 180
+            if value < -90:
+                value = 180 + value
+            elif value > 90:
+                value = -180 + value
+        return value
 
-    Returns a query object of PackageExtents, which each reference a package
-    by ID.
-    '''
+    return {
+        "minx": _adjust_longitude(bbox_dict["minx"]),
+        "maxx": _adjust_longitude(bbox_dict["maxx"]),
+        "miny": _adjust_latitude(bbox_dict["miny"]),
+        "maxy": _adjust_latitude(bbox_dict["maxy"]),
+    }
 
-    input_geometry = _bbox_2_wkt(bbox, srid)
 
-    extents = Session.query(PackageExtent) \
-              .filter(PackageExtent.package_id==Package.id) \
-              .filter(PackageExtent.the_geom.intersects(input_geometry)) \
-              .filter(Package.state==u'active')
-    return extents
+def fit_linear_ring(lr):
 
-def bbox_query_ordered(bbox, srid=None):
-    '''
-    Performs a spatial query of a bounding box. Returns packages in order
-    of how similar the data\'s bounding box is to the search box (best first).
+    bbox = {
+        "minx": lr[0][0],
+        "maxx": lr[2][0],
+        "miny": lr[0][1],
+        "maxy": lr[2][1],
+    }
 
-    bbox - bounding box dict
+    bbox = fit_bbox(bbox)
 
-    Returns a query object of PackageExtents, which each reference a package
-    by ID.
-    '''
-
-    input_geometry = _bbox_2_wkt(bbox, srid)
-
-    params = {'query_bbox': six.text_type(input_geometry),
-              'query_srid': input_geometry.srid}
-
-    # First get the area of the query box
-    sql = "SELECT ST_Area(ST_GeomFromText(:query_bbox, :query_srid));"
-    params['search_area'] = Session.execute(sql, params).fetchone()[0]
-
-    # Uses spatial ranking method from "USGS - 2006-1279" (Lanfear)
-    sql = """SELECT ST_AsBinary(package_extent.the_geom) AS package_extent_the_geom,
-                    POWER(ST_Area(ST_Intersection(package_extent.the_geom, ST_GeomFromText(:query_bbox, :query_srid))),2)/ST_Area(package_extent.the_geom)/:search_area as spatial_ranking,
-                    package_extent.package_id AS package_id
-             FROM package_extent, package
-             WHERE package_extent.package_id = package.id
-                AND ST_Intersects(package_extent.the_geom, ST_GeomFromText(:query_bbox, :query_srid))
-                AND package.state = 'active'
-             ORDER BY spatial_ranking desc"""
-    extents = Session.execute(sql, params).fetchall()
-    log.debug('Spatial results: %r',
-              [('%.2f' % extent.spatial_ranking, extent.package_id) for extent in extents[:20]])
-    return extents
+    return [
+        (bbox["minx"], bbox["maxy"]),
+        (bbox["minx"], bbox["miny"]),
+        (bbox["maxx"], bbox["miny"]),
+        (bbox["maxx"], bbox["maxy"]),
+        (bbox["minx"], bbox["maxy"]),
+    ]
