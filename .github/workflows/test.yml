@@ -57,7 +57,7 @@ jobs:
       PGPASSWORD: postgres
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install harvester
       run: |
         git clone https://github.com/ckan/ckanext-harvest
