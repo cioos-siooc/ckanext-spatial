@@ -61,6 +61,14 @@ reindexing) it can be turn off with the following option::
 
     ckanext.spatial.harvest.reindex_unchanged = False
 
+To restrict which contact roles are included in the ``responsible-party`` extras field across all
+harvest sources, set the following option with a comma-separated list of ISO role codes::
+
+    ckanext.spatial.harvest.citation_contact_roles = pointOfContact,owner,originator
+
+If not set, all contact roles are included. Individual harvest sources can override this with the
+``citation_contact_roles`` source configuration option (see below).
+
 You can configure the single harvesters using a JSON object in the configuration form field.
 The currently supported configuration options are:
 
@@ -75,6 +83,14 @@ The currently supported configuration options are:
   and spaces replaced with dashes. Setting this option to False gives the same effect as leaving it unset.
 * ``validator_profiles``: A list of string that specifies a list of validators that will be applied to the
   current harvester, overriding the global ones defined by the 'ckan.spatial.validator.profiles' option.
+* ``citation_contact_roles``: A list of role strings (e.g. ``["pointOfContact", "owner", "originator"]``)
+  used to filter the ``responsible-organisation`` contacts extracted from harvested metadata. Only contacts
+  whose role matches one of the listed values will be included in the ``responsible-party`` extras field.
+  Defaults to all roles (no filtering). A system-wide default can be set via the CKAN config option
+  ``ckanext.spatial.harvest.citation_contact_roles`` (comma-separated string), which can also be supplied
+  as the environment variable ``CKANEXT__SPATIAL__HARVEST__CITATION_CONTACT_ROLES``. A per-source
+  ``citation_contact_roles`` list takes precedence over the global default. Setting either to an empty
+  value restores the default of including all roles.
 
 
 Customizing the harvesters

@@ -228,6 +228,12 @@ class SpatialHarvester(HarvesterBase):
                     if not isinstance(source_config_obj[key],bool):
                         raise ValueError('%s must be boolean' % key)
 
+            if 'citation_contact_roles' in source_config_obj:
+                if not isinstance(source_config_obj['citation_contact_roles'], list):
+                    raise ValueError('citation_contact_roles must be a list')
+                if not all(isinstance(r, str) for r in source_config_obj['citation_contact_roles']):
+                    raise ValueError('citation_contact_roles must be a list of strings')
+
         except ValueError as e:
             raise e
 
@@ -659,6 +665,14 @@ class SpatialHarvester(HarvesterBase):
                 log.debug('Using ISO19115-3 parser')
                 iso_parser = ISODocument(harvest_object.content)
             iso_values = iso_parser.read_values()
+            default_contact_roles = config.get('ckanext.spatial.harvest.citation_contact_roles', '')
+            default_contact_roles = [r.strip() for r in default_contact_roles.split(',') if r.strip()]
+            contact_roles = self.source_config.get('citation_contact_roles', default_contact_roles)
+            if contact_roles and iso_values.get('responsible-organisation'):
+                iso_values['responsible-organisation'] = [
+                    p for p in iso_values['responsible-organisation']
+                    if p.get('role') in contact_roles
+                ]
         except Exception as e:
             log.exception(e)
             self._save_object_error('Error parsing ISO document for object {0}: {1}'.format(harvest_object.id, six.text_type(e)),
