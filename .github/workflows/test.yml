@@ -88,6 +88,7 @@ jobs:
       run: |
         apk add --no-cache \
           python3-dev
+        pip install "Cython<3"
         pip install -r requirements.txt
     - name: Install requirements
       run: |
